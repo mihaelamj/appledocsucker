@@ -10,8 +10,8 @@ INSTALL = install
 
 # Build configuration
 SWIFT_BUILD_FLAGS = -c release
-PRODUCT_NAME_CLI = docsucker
-PRODUCT_NAME_MCP = docsucker-mcp
+PRODUCT_NAME_CLI = appledocsucker
+PRODUCT_NAME_MCP = appledocsucker-mcp
 
 # Detect architecture
 ARCH := $(shell uname -m)
@@ -27,7 +27,7 @@ GREEN := $(shell tput setaf 2)
 YELLOW := $(shell tput setaf 3)
 RESET := $(shell tput sgr0)
 
-.PHONY: all build build-debug build-release install uninstall test clean help
+.PHONY: all build build-debug build-release install install-symlinks uninstall update test clean help
 
 # Default target
 all: build
@@ -40,7 +40,9 @@ help:
 	@echo "  $(GREEN)make build$(RESET)         - Build both executables (release mode)"
 	@echo "  $(GREEN)make build-debug$(RESET)   - Build both executables (debug mode)"
 	@echo "  $(GREEN)make build-release$(RESET) - Build both executables (release mode, optimized)"
-	@echo "  $(GREEN)make install$(RESET)       - Install executables to $(BINDIR)"
+	@echo "  $(GREEN)make install$(RESET)       - Install executables to $(BINDIR) (copy)"
+	@echo "  $(GREEN)make install-symlinks$(RESET) - Install with symlinks (recommended for dev)"
+	@echo "  $(GREEN)make update$(RESET)        - Quick rebuild and update for development"
 	@echo "  $(GREEN)make uninstall$(RESET)     - Remove installed executables"
 	@echo "  $(GREEN)make test$(RESET)          - Run all tests"
 	@echo "  $(GREEN)make test-unit$(RESET)     - Run unit tests only (skip integration)"
@@ -92,9 +94,9 @@ build-release:
 	@echo "  CLI: $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI)"
 	@echo "  MCP: $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP)"
 
-## install: Install executables to PREFIX/bin (requires sudo if PREFIX=/usr/local)
+## install: Install executables to PREFIX/bin (copy, requires sudo if PREFIX=/usr/local)
 install: build-release
-	@echo "$(BOLD)$(GREEN)Installing to $(BINDIR)...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Installing to $(BINDIR) (copy)...$(RESET)"
 	@mkdir -p $(BINDIR)
 	$(INSTALL) -m 755 $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) $(BINDIR)/$(PRODUCT_NAME_CLI)
 	$(INSTALL) -m 755 $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP) $(BINDIR)/$(PRODUCT_NAME_MCP)
@@ -102,7 +104,33 @@ install: build-release
 	@echo "  Installed: $(BINDIR)/$(PRODUCT_NAME_CLI)"
 	@echo "  Installed: $(BINDIR)/$(PRODUCT_NAME_MCP)"
 	@echo ""
+	@echo "$(YELLOW)Note: Files are copied. Use 'make install-symlinks' for development.$(RESET)"
+	@echo ""
 	@echo "$(YELLOW)Verify installation:$(RESET)"
+	@echo "  $(PRODUCT_NAME_CLI) --version"
+	@echo "  $(PRODUCT_NAME_MCP) --version"
+
+## install-symlinks: Install with symlinks (recommended for development)
+install-symlinks: build-release
+	@echo "$(BOLD)$(GREEN)Installing to $(BINDIR) (symlinks)...$(RESET)"
+	@mkdir -p $(BINDIR)
+	@ln -sf "$(PWD)/$(BUILD_DIR)/release/$(PRODUCT_NAME_CLI)" $(BINDIR)/$(PRODUCT_NAME_CLI)
+	@ln -sf "$(PWD)/$(BUILD_DIR)/release/$(PRODUCT_NAME_MCP)" $(BINDIR)/$(PRODUCT_NAME_MCP)
+	@echo "$(GREEN)✓ Installation complete (symlinks)$(RESET)"
+	@echo "  Symlinked: $(BINDIR)/$(PRODUCT_NAME_CLI) -> $(PWD)/$(BUILD_DIR)/release/$(PRODUCT_NAME_CLI)"
+	@echo "  Symlinked: $(BINDIR)/$(PRODUCT_NAME_MCP) -> $(PWD)/$(BUILD_DIR)/release/$(PRODUCT_NAME_MCP)"
+	@echo ""
+	@echo "$(YELLOW)Development workflow: Just run 'make update' to rebuild and use!$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Verify installation:$(RESET)"
+	@echo "  $(PRODUCT_NAME_CLI) --version"
+	@echo "  $(PRODUCT_NAME_MCP) --version"
+
+## update: Quick rebuild for development (use with install-symlinks)
+update: build-release
+	@echo "$(GREEN)✓ Update complete! Changes are live.$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Test your changes:$(RESET)"
 	@echo "  $(PRODUCT_NAME_CLI) --version"
 	@echo "  $(PRODUCT_NAME_MCP) --version"
 
@@ -170,7 +198,7 @@ lint:
 archive: build-release
 	@echo "$(BOLD)$(GREEN)Creating release archive...$(RESET)"
 	@VERSION=$$($(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) --version); \
-	ARCHIVE_NAME="docsucker-$$VERSION-$(ARCH)-apple-darwin"; \
+	ARCHIVE_NAME="appledocsucker-$$VERSION-$(ARCH)-apple-darwin"; \
 	mkdir -p "$$ARCHIVE_NAME/bin"; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) "$$ARCHIVE_NAME/bin/"; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP) "$$ARCHIVE_NAME/bin/"; \
@@ -185,7 +213,7 @@ archive: build-release
 bottle: build-release
 	@echo "$(BOLD)$(GREEN)Creating Homebrew bottle...$(RESET)"
 	@VERSION=$$($(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) --version); \
-	BOTTLE_NAME="docsucker-$$VERSION.$(ARCH)_monterey.bottle.tar.gz"; \
+	BOTTLE_NAME="appledocsucker-$$VERSION.$(ARCH)_monterey.bottle.tar.gz"; \
 	mkdir -p bottle/$(PREFIX)/bin; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) bottle/$(PREFIX)/bin/; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP) bottle/$(PREFIX)/bin/; \

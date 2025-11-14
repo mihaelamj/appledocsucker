@@ -1,7 +1,7 @@
 # Root Makefile for Docsucker
 # Delegates all commands to Packages/Makefile
 
-.PHONY: help all build build-debug build-release install uninstall test test-unit test-integration
+.PHONY: help all build build-debug build-release install install-symlinks uninstall update test test-unit test-integration
 .PHONY: clean distclean format lint archive bottle dev run-cli run-mcp watch version b i u t c
 
 # Default target
@@ -26,8 +26,14 @@ build-release:
 install:
 	@$(MAKE) -C Packages install
 
+install-symlinks:
+	@$(MAKE) -C Packages install-symlinks
+
 uninstall:
 	@$(MAKE) -C Packages uninstall
+
+update:
+	@$(MAKE) -C Packages update
 
 # Testing
 test:
