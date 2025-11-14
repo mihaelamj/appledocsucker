@@ -1,11 +1,4 @@
 repos:
-  - repo: https://github.com/krzysztofzablocki/Sourcery
-    rev: 2.0.2
-    hooks:
-      - id: sourcery
-        args: [--quiet]
-        stages: [pre-commit]
-
   - repo: https://github.com/realm/SwiftLint
     rev: 0.57.0
     hooks:

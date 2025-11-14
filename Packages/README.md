@@ -11,6 +11,49 @@ Docsucker provides two powerful command-line tools:
 
 ## Quick Start
 
+> **Note**: All commands in this guide assume you're in the `Packages` directory. Alternatively, you can run `make` commands from the **root directory** using the wrapper Makefile (e.g., `make build` instead of `cd Packages && make build`).
+
+### 0.Test Locally
+
+```bash
+  # Download everything (will take 2-4 hours total)
+  Packages/.build/debug/docsucker crawl \
+    --start-url "https://developer.apple.com/documentation/" \
+    --max-pages 15000 \
+    --output-dir ~/.docsucker/docs
+
+  Packages/.build/debug/docsucker crawl-evolution \
+    --output-dir ~/.docsucker/swift-evolution
+```
+
+```bash
+
+ # Build first (one time)
+  swift build --package-path Packages
+
+  # Then run CLI
+  Packages/.build/debug/docsucker --help
+  Packages/.build/debug/docsucker --version
+
+  # Download some docs
+  Packages/.build/debug/docsucker crawl \
+    --start-url "https://developer.apple.com/documentation/swift/array" \
+    --max-pages 3 \
+    --output-dir ~/docsucker-test
+
+  # Run MCP server
+  Packages/.build/debug/docsucker-mcp serve
+
+  # Or if you want shorter commands, you can add these aliases to your ~/.zshrc:
+
+  alias docsucker='Packages/.build/debug/docsucker'
+  alias docsucker-mcp='Packages/.build/debug/docsucker-mcp'
+
+  Then just:
+  docsucker --help
+  docsucker-mcp serve
+```
+
 ### 1. Build
 
 ```bash
@@ -35,6 +78,23 @@ Download Swift Evolution proposals (takes 2-5 minutes):
 .build/debug/docsucker crawl-evolution \
   --output-dir ~/.docsucker/swift-evolution
 ```
+
+Download Apple sample code projects (zip/tar files):
+
+```bash
+# First time - authenticate
+.build/debug/docsucker download-samples \
+  --authenticate \
+  --output-dir ~/.docsucker/sample-code \
+  --max-samples 10
+
+# Subsequent runs - reuses saved cookies
+.build/debug/docsucker download-samples \
+  --output-dir ~/.docsucker/sample-code \
+  --max-samples 100
+```
+
+> **Note**: Use `--authenticate` flag on first run to sign in with your Apple Developer account. Authentication cookies are saved and reused automatically for subsequent downloads.
 
 ### 3. Serve to AI Agents
 
@@ -88,12 +148,14 @@ Packages/
 ### Docsucker CLI
 
 - 🚀 **Fast WKWebView Crawling** - Native WebKit for accurate page rendering
-- 📝 **HTML to Markdown** - Clean, readable documentation format
+- 📝 **HTML to Markdown** - Clean, readable documentation format with code syntax highlighting
 - 🔍 **Smart Change Detection** - SHA-256 hashing to skip unchanged pages
 - 📊 **Progress Tracking** - Real-time statistics and progress updates
 - 🎯 **Framework Organization** - Automatic categorization by framework
 - 🔄 **Incremental Updates** - Only re-download changed content
 - 🐙 **Swift Evolution** - Download all accepted proposals from GitHub
+- 📦 **Sample Code Downloads** - Download Apple sample code projects (zip/tar files)
+- 📄 **PDF Export** - Convert markdown documentation to PDF format
 
 ### Docsucker MCP Server
 
@@ -153,15 +215,15 @@ Then ask Claude: *"Show me the documentation for SwiftUI's View protocol"*
 ### Layered Design
 
 ```
-┌─────────────────────────────────────────┐
-│         Executable Layer                │
+┌────────────────────────────────────────┐
+│         Executable Layer               │
 │  ┌─────────────┐    ┌────────────────┐ │
 │  │DocsuckerCLI │    │ DocsuckerMCP   │ │
 │  └──────┬──────┘    └────────┬───────┘ │
 └─────────┼───────────────────┼──────────┘
           │                   │
-┌─────────▼───────────────────▼──────────┐
-│        Application Layer               │
+┌─────────▼───────────────────▼─────────┐
+│        Application Layer              │
 │  ┌──────────────┐  ┌──────────────┐   │
 │  │DocsuckerCore │  │ MCP Support  │   │
 │  └──────┬───────┘  └──────┬───────┘   │
@@ -170,15 +232,15 @@ Then ask Claude: *"Show me the documentation for SwiftUI's View protocol"*
 │  └───────────────────────┘        │   │
 └───────────────────────────────────┼───┘
                                     │
-┌───────────────────────────────────▼───┐
-│       Infrastructure Layer            │
+┌───────────────────────────────────▼──┐
+│       Infrastructure Layer           │
 │  ┌───────────┐  ┌──────────────┐     │
 │  │MCPServer  │  │ MCPTransport │     │
 │  └─────┬─────┘  └──────┬───────┘     │
 │  ┌─────▼────────────────▼───────┐    │
 │  │       MCPShared              │    │
 │  └──────────────────────────────┘    │
-└───────────────────────────────────────┘
+└──────────────────────────────────────┘
 ```
 
 ### Key Components

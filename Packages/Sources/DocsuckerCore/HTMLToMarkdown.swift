@@ -71,6 +71,12 @@ public enum HTMLToMarkdown {
     private static func convertHTMLToMarkdown(_ html: String) -> String {
         var markdown = html
 
+        // Remove unwanted sections
+        markdown = removeUnwantedSections(markdown)
+
+        // Remove "This page requires JavaScript." and similar messages
+        markdown = removeJavaScriptWarnings(markdown)
+
         // Headers
         markdown = markdown.replacingOccurrences(
             of: #"<h1[^>]*>(.*?)</h1>"#,
@@ -103,12 +109,8 @@ public enum HTMLToMarkdown {
             options: .regularExpression
         )
 
-        // Code blocks
-        markdown = markdown.replacingOccurrences(
-            of: #"<pre[^>]*><code[^>]*>(.*?)</code></pre>"#,
-            with: "```\n$1\n```\n\n",
-            options: [.regularExpression, .caseInsensitive]
-        )
+        // Code blocks with language detection
+        markdown = convertCodeBlocks(markdown)
 
         // Inline code
         markdown = markdown.replacingOccurrences(
@@ -179,6 +181,115 @@ public enum HTMLToMarkdown {
     }
 
     // MARK: - Utilities
+
+    private static func convertCodeBlocks(_ html: String) -> String {
+        var result = html
+
+        // Pattern to match <pre><code class="language-swift">...</code></pre>
+        // or <pre><code class="swift">...</code></pre>
+        let pattern = #"<pre[^>]*>\s*<code\s+class=[\"'](?:language-)?(\w+)[\"'][^>]*>(.*?)</code>\s*</pre>"#
+
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive, .dotMatchesLineSeparators]) {
+            let nsString = result as NSString
+            let matches = regex.matches(in: result, range: NSRange(location: 0, length: nsString.length))
+
+            for match in matches.reversed() {
+                if match.numberOfRanges >= 3 {
+                    let languageRange = match.range(at: 1)
+                    let codeRange = match.range(at: 2)
+
+                    if languageRange.location != NSNotFound && codeRange.location != NSNotFound {
+                        let language = nsString.substring(with: languageRange).lowercased()
+                        let code = nsString.substring(with: codeRange)
+
+                        let replacement = "```\(language)\n\(code)\n```\n\n"
+                        result = (result as NSString).replacingCharacters(in: match.range, with: replacement)
+                    }
+                }
+            }
+        }
+
+        // Fallback: Convert code blocks without language specification
+        result = result.replacingOccurrences(
+            of: #"<pre[^>]*>\s*<code[^>]*>(.*?)</code>\s*</pre>"#,
+            with: "```\n$1\n```\n\n",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        return result
+    }
+
+    private static func removeUnwantedSections(_ html: String) -> String {
+        var result = html
+
+        // Remove noscript tags and their content
+        result = result.replacingOccurrences(
+            of: #"<noscript[^>]*>.*?</noscript>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        // Remove script tags
+        result = result.replacingOccurrences(
+            of: #"<script[^>]*>.*?</script>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        // Remove style tags
+        result = result.replacingOccurrences(
+            of: #"<style[^>]*>.*?</style>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        // Remove navigation elements
+        result = result.replacingOccurrences(
+            of: #"<nav[^>]*>.*?</nav>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        // Remove header/footer elements (often contain navigation)
+        result = result.replacingOccurrences(
+            of: #"<header[^>]*>.*?</header>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+        result = result.replacingOccurrences(
+            of: #"<footer[^>]*>.*?</footer>"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+
+        return result
+    }
+
+    private static func removeJavaScriptWarnings(_ html: String) -> String {
+        var result = html
+
+        // Common JavaScript warning patterns
+        let warnings = [
+            "This page requires JavaScript.",
+            "Please turn on JavaScript",
+            "Please enable JavaScript",
+            "JavaScript is required",
+            "Enable JavaScript to view",
+        ]
+
+        for warning in warnings {
+            result = result.replacingOccurrences(of: warning, with: "", options: .caseInsensitive)
+        }
+
+        // Remove common heading for JavaScript warnings
+        result = result.replacingOccurrences(
+            of: #"#\s*This page requires JavaScript\.\s*\n"#,
+            with: "",
+            options: .regularExpression
+        )
+
+        return result
+    }
 
     private static func stripHTML(_ html: String) -> String {
         html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)

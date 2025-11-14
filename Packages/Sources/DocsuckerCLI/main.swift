@@ -11,7 +11,7 @@ struct Docsucker: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Apple Documentation Crawler",
         version: "1.0.0",
-        subcommands: [Crawl.self, CrawlEvolution.self, Update.self, Config.self],
+        subcommands: [Crawl.self, CrawlEvolution.self, DownloadSamples.self, ExportPDF.self, Update.self, Config.self],
         defaultSubcommand: Crawl.self
     )
 }
@@ -111,6 +111,117 @@ extension Docsucker {
             print("   Total: \(stats.totalProposals) proposals")
             print("   New: \(stats.newProposals)")
             print("   Updated: \(stats.updatedProposals)")
+            print("   Errors: \(stats.errors)")
+            if let duration = stats.duration {
+                print("   Duration: \(Int(duration))s")
+            }
+        }
+    }
+}
+
+// MARK: - Download Samples Command
+
+extension Docsucker {
+    @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
+    struct DownloadSamples: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "download-samples",
+            abstract: "Download Apple sample code projects (zip/tar files)"
+        )
+
+        @Option(name: .long, help: "Output directory for sample code files")
+        var outputDir: String = "~/.docsucker/sample-code"
+
+        @Option(name: .long, help: "Maximum number of samples to download")
+        var maxSamples: Int? = nil
+
+        @Flag(name: .long, help: "Force re-download of existing files")
+        var force: Bool = false
+
+        @Flag(name: .long, help: "Launch visible browser for authentication (sign in to Apple Developer)")
+        var authenticate: Bool = false
+
+        mutating func run() async throws {
+            print("🚀 Sample Code Downloader\n")
+
+            let outputURL = URL(fileURLWithPath: outputDir).expandingTildeInPath
+
+            // Create output directory if needed
+            try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+
+            // Create crawler
+            let crawler = await SampleCodeDownloader(
+                outputDirectory: outputURL,
+                maxSamples: maxSamples,
+                forceDownload: force,
+                visibleBrowser: authenticate
+            )
+
+            // Run crawler
+            let stats = try await crawler.download { progress in
+                print("   Progress: \(String(format: "%.1f", progress.percentage))% - \(progress.sampleName)")
+            }
+
+            print("\n✅ Download completed!")
+            print("   Total: \(stats.totalSamples) samples")
+            print("   Downloaded: \(stats.downloadedSamples)")
+            print("   Skipped: \(stats.skippedSamples)")
+            print("   Errors: \(stats.errors)")
+            if let duration = stats.duration {
+                print("   Duration: \(Int(duration))s")
+            }
+        }
+    }
+}
+
+// MARK: - Export PDF Command
+
+extension Docsucker {
+    @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
+    struct ExportPDF: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "export-pdf",
+            abstract: "Export markdown documentation to PDF format"
+        )
+
+        @Option(name: .long, help: "Input directory containing markdown files")
+        var inputDir: String = "~/.docsucker/docs"
+
+        @Option(name: .long, help: "Output directory for PDF files")
+        var outputDir: String = "~/.docsucker/pdfs"
+
+        @Option(name: .long, help: "Maximum number of files to convert")
+        var maxFiles: Int? = nil
+
+        @Flag(name: .long, help: "Force re-export of existing PDFs")
+        var force: Bool = false
+
+        mutating func run() async throws {
+            print("📄 PDF Exporter\n")
+
+            let inputURL = URL(fileURLWithPath: inputDir).expandingTildeInPath
+            let outputURL = URL(fileURLWithPath: outputDir).expandingTildeInPath
+
+            // Create output directory
+            try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+
+            // Create exporter
+            let exporter = await PDFExporter(
+                inputDirectory: inputURL,
+                outputDirectory: outputURL,
+                maxFiles: maxFiles,
+                forceExport: force
+            )
+
+            // Run export
+            let stats = try await exporter.export { progress in
+                print("   Progress: \(String(format: "%.1f", progress.percentage))% - \(progress.fileName)")
+            }
+
+            print("\n✅ Export completed!")
+            print("   Total: \(stats.totalFiles) files")
+            print("   Exported: \(stats.exportedFiles)")
+            print("   Skipped: \(stats.skippedFiles)")
             print("   Errors: \(stats.errors)")
             if let duration = stats.duration {
                 print("   Duration: \(Int(duration))s")

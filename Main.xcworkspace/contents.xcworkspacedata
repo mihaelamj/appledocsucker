@@ -4,10 +4,4 @@
    <FileRef
       location = "group:Packages">
    </FileRef>
-   <FileRef
-      location = "group:Apps/Demo/Demo.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Apps/ComponentsPreview/ComponentsPreview.xcodeproj">
-   </FileRef>
 </Workspace>

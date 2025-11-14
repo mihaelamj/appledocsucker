@@ -5,12 +5,14 @@ A Swift command-line tool for downloading and converting Apple documentation to 
 ## Features
 
 - 🚀 **Fast WKWebView-based crawling** - Uses native WebKit for accurate rendering
-- 📝 **HTML to Markdown conversion** - Clean, readable documentation in Markdown format
+- 📝 **HTML to Markdown conversion** - Clean, readable documentation in Markdown format with code syntax highlighting
 - 🔍 **Smart change detection** - SHA-256 content hashing to skip unchanged pages
 - 📊 **Progress tracking** - Real-time statistics and progress updates
 - 🎯 **Framework organization** - Automatically organizes docs by framework
 - 🔄 **Incremental updates** - Only re-downloads changed content
 - 🐙 **Swift Evolution proposals** - Download all accepted Swift Evolution proposals from GitHub
+- 📦 **Sample code downloads** - Download Apple sample code projects as zip/tar files
+- 📄 **PDF export** - Convert markdown documentation to beautifully formatted PDF files
 
 ## Installation
 
@@ -92,7 +94,134 @@ This will:
 **Estimated time:** 2-5 minutes
 **Estimated size:** ~10-20 MB
 
-### 4. Update Existing Documentation (Incremental)
+### 4. Download Apple Sample Code Projects
+
+Download Apple sample code projects as zip/tar files:
+
+**First time - Authenticate with Apple:**
+
+```bash
+docsucker download-samples \
+  --authenticate \
+  --output-dir ~/.docsucker/sample-code \
+  --max-samples 10
+```
+
+This will:
+1. Open a browser window showing the Apple Developer sign-in page
+2. Wait for you to sign in with your Apple ID
+3. Save your authentication cookies
+4. Proceed to download samples
+
+**Subsequent downloads (reuses saved authentication):**
+
+```bash
+docsucker download-samples \
+  --output-dir ~/.docsucker/sample-code \
+  --max-samples 100
+```
+
+**Parameters:**
+- `--authenticate` - Launch visible browser for authentication (use on first run)
+- `--output-dir` - Where to save sample code files (default: `~/.docsucker/sample-code`)
+- `--max-samples` - Limit number of samples to download (optional, downloads all if not specified)
+- `--force` - Force re-download of existing files
+
+This will:
+- Scan the Apple Sample Code Library (~618 samples)
+- Extract download links from each sample page
+- Download the original zip/tar files with clean filenames
+- Skip already downloaded files (unless `--force` is used)
+
+**Example output:**
+```
+🚀 Sample Code Downloader
+
+📋 Fetching sample code list...
+   Found 618 samples
+   Downloading 100 samples
+
+📦 [1/100] Landmarks: Building an app with Liquid Glass
+   📥 Downloading from: https://developer.apple.com/...
+   ✅ Saved: landmarks-building-an-app-with-liquid-glass.zip
+   Progress: 1.0%
+
+...
+
+✅ Download completed!
+   Total: 100 samples
+   Downloaded: 95
+   Skipped: 5
+   Errors: 0
+   Duration: 180s
+```
+
+**Important Notes:**
+- 🔐 **Authentication**: Use `--authenticate` on first run to sign in with your Apple Developer account. Cookies are saved to `.auth-cookies.json` in the output directory
+- 📦 Some samples may be distributed as `.zip`, others as `.tar.gz` - the tool handles both automatically
+- 🔍 The tool first catalogs all available samples (~618 total), then downloads each one
+- ⏱️ Rate limiting is applied (1 second delay between downloads) to be respectful to Apple's servers
+- 🔄 **Reusing authentication**: After first successful authentication, cookies are reused automatically for subsequent downloads
+- 🗑️ **Clear auth**: Delete `.auth-cookies.json` to sign in with a different account
+
+**Estimated time:** Variable (depends on number of samples and authentication)
+**Estimated size:** Varies per sample (typically 50KB - 50MB each)
+
+### 5. Export Documentation to PDF
+
+Convert downloaded markdown documentation to PDF format:
+
+```bash
+docsucker export-pdf \
+  --input-dir ~/.docsucker/docs \
+  --output-dir ~/.docsucker/pdfs
+```
+
+**Parameters:**
+- `--input-dir` - Directory containing markdown files (default: `~/.docsucker/docs`)
+- `--output-dir` - Directory for PDF output (default: `~/.docsucker/pdfs`)
+- `--max-files` - Limit number of files to convert (optional)
+- `--force` - Force re-export of existing PDFs
+
+This will:
+- Scan the input directory recursively for `.md` files
+- Convert each markdown file to a styled PDF
+- Preserve the directory structure in the output
+- Skip already exported files (unless `--force` is used)
+
+**Example output:**
+```
+📄 PDF Exporter
+
+📋 Scanning for markdown files...
+   Found 150 markdown files
+   Exporting 150 files
+
+📄 [1/150] documentation_swift_array.md
+   ✅ Exported: documentation_swift_array.pdf
+   Progress: 0.7%
+
+...
+
+✅ Export completed!
+   Total: 150 files
+   Exported: 145
+   Skipped: 5
+   Errors: 0
+   Duration: 120s
+```
+
+**PDF Features:**
+- 📝 **Styled formatting** - Clean, readable layout with proper typography
+- 💻 **Syntax highlighting** - Code blocks with language-specific formatting
+- 📄 **A4 page size** - Standard 595x842 points
+- 🎨 **Custom CSS** - Matches GitHub markdown styling
+- 📚 **Preserves structure** - Headers, links, lists, bold, italic, code
+
+**Estimated time:** ~1 second per file
+**Estimated size:** Typically 50-500KB per PDF
+
+### 6. Update Existing Documentation (Incremental)
 
 Re-run crawl to update only changed pages:
 
