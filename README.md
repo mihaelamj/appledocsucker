@@ -1,6 +1,6 @@
 # AppleDocsucker - Apple Documentation Crawler & MCP Server
 
-A Swift toolset for downloading Apple documentation and Swift Evolution proposals, then serving them to AI agents via the Model Context Protocol (MCP).
+TBD
 
 [![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)](https://swift.org)
 [![macOS 15+](https://img.shields.io/badge/macOS-15+-blue.svg)](https://www.apple.com/macos)
