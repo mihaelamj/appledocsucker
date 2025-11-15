@@ -32,9 +32,12 @@ claude code --continue
 ## Current Status
 
 **In Progress:**
-- ⏳ **Documentation Crawl** - Currently at ~8,421 pages (64.8% of ~13,000 total)
-  - ETA: Tonight ~10 PM (Nov 15)
+- ⏳ **Documentation Crawl** - Currently at ~10,099+ pages (growing)
+  - Started: Nov 14, 2024 12:00 AM
+  - ETA: Nov 15, 2024 ~10 PM (tonight)
+  - Duration: ~22 hours total
   - Command: `appledocsucker --start-url https://developer.apple.com/documentation/swift --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force`
+  - Status: Crawling depth=3 API methods (e.g., Array.dropFirst(), Collection.firstIndex())
 
 **Completed:**
 - ✅ CLI crawler with resume capability
@@ -48,6 +51,7 @@ claude code --continue
 - ✅ SwiftLint compliance
 - ✅ os.log logging implementation
 - ✅ Directory structure documentation (hardcoded paths)
+- ✅ **Incremental update/refresh capability** (`appledocsucker update` command with change detection)
 
 ---
 
@@ -55,7 +59,13 @@ claude code --continue
 
 **Priority: IMMEDIATE (waiting for completion)**
 
-- [ ] Wait for crawl to complete (~13,000 pages)
+**Current crawl session:**
+- Started: Nov 14, 2024 12:00 AM
+- Expected completion: Nov 15, 2024 ~10:00 PM
+- Current progress: 10,099+ pages
+
+**Tasks after crawl completes:**
+- [ ] Wait for crawl to complete (~13,000 pages estimated)
 - [ ] Rebuild search index with all downloaded documentation
   ```bash
   appledocsucker build-index \
@@ -63,9 +73,15 @@ claude code --continue
     --evolution-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution \
     --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
   ```
+- [ ] **Store crawl metadata in index:**
+  - Crawl started: 2024-11-14 00:00:00
+  - Crawl completed: 2024-11-15 22:00:00 (estimated)
+  - Total pages crawled
+  - Frameworks covered
+  - Version/snapshot ID
 - [ ] Verify search index statistics
 - [ ] Test MCP server with full index
-- [ ] Create initial snapshot for delta tracking
+- [ ] Create initial snapshot for future delta tracking
 
 **Estimated Time:** Wait time + 1 hour for indexing/verification
 
@@ -286,28 +302,61 @@ claude code --continue
 
 ---
 
-## Phase 5: Delta Tracking & Change Detection
+## Phase 5: Historical Delta Tracking & Fast Check Mode
 
 **Priority: MEDIUM**
 **Reference:** `SAMPLE_CODE_PLAN.md` Phase 6
-**Estimated Time:** 5-7 hours
+**Estimated Time:** 6-9 hours
+
+**Note:** Basic refresh/update is already working via `appledocsucker update` command (uses change detection to skip unchanged pages). This phase adds:
+1. **Historical tracking** - Track changes over time for analysis
+2. **Fast check mode** - Quickly discover what changed without downloading
 
 ### Phase 5a: Snapshot Infrastructure (2-3 hours)
 - [ ] Create `CrawlSnapshot` struct
 - [ ] Implement snapshot generation in `SearchIndex`
 - [ ] Add `--create-snapshot` flag to `build-index` command
 - [ ] Add `crawl_history` table to track snapshots
+- [ ] **Store crawl dates in index** (started_at, completed_at timestamps)
+- [ ] Store metadata: total pages, frameworks covered, version
 
-### Phase 5b: Delta Calculation (2-3 hours)
+### Phase 5b: Fast Check Mode (2-3 hours)
+- [ ] Add `appledocsucker check` command
+- [ ] **Skip request delays** when in check-only mode
+- [ ] Only fetch headers or lightweight page metadata
+- [ ] Compare content hashes without downloading full HTML
+- [ ] Generate list of changed URLs (new, modified, removed)
+- [ ] Output: JSON file with change summary
+- [ ] Example: `{"new": [...], "modified": [...], "removed": [...]}`
+- [ ] Much faster than full crawl (just checking, not downloading)
+
+### Phase 5c: Delta Calculation (1-2 hours)
 - [ ] Create `appledocsucker compare` command
+- [ ] Compare two snapshots or check results
 - [ ] Implement delta calculation (added/modified/removed)
 - [ ] Generate delta JSON files
 - [ ] Store in `/Volumes/Code/DeveloperExt/appledocsucker/deltas/`
 
-### Phase 5c: MCP Integration (1 hour)
+### Phase 5d: MCP Integration (1 hour)
 - [ ] Add `get_documentation_changes` MCP tool
 - [ ] Support filtering by framework, date range
+- [ ] Query: "What changed in SwiftUI since last week?"
 - [ ] Test change detection queries
+
+**Workflow:**
+```bash
+# 1. Fast check (no delays, just discover changes)
+appledocsucker check --output changes.json
+
+# 2. Review changes
+cat changes.json  # See what's new/modified
+
+# 3. Selective download (only changed pages)
+appledocsucker update --only-changed changes.json
+
+# 4. Full update (if needed)
+appledocsucker update  # Downloads all changes
+```
 
 ---
 
@@ -480,5 +529,6 @@ appledocsucker index-samples \
 
 ---
 
-*Last updated: 2024-11-15 03:30 AM*
-*Current crawl: 8,421 pages (64.8% complete)*
+*Last updated: 2024-11-15 (during crawl session)*
+*Current crawl: Started Nov 14 12:00 AM, ETA Nov 15 10:00 PM*
+*Progress: 10,099+ pages crawled (still running)*

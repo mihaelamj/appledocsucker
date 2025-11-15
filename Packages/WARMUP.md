@@ -76,9 +76,10 @@ Key Documents:
 1. DIRECTORY_STRUCTURE.md - Hardcoded paths reference
 2. TODO.md - Comprehensive task list with all phases
 3. CONSTRAINTS.md - Critical constraints and design decisions
-4. GUI_PROPOSAL.md - Native macOS SwiftUI GUI plan (6-8 hours realistic)
-5. SAMPLE_CODE_PLAN.md - Sample code integration plan (4 phases)
-6. Package.swift - Swift package configuration
+4. UPDATE_STRATEGY.md - Fast check mode and refresh strategy
+5. GUI_PROPOSAL.md - Native macOS SwiftUI GUI plan (6-8 hours realistic)
+6. SAMPLE_CODE_PLAN.md - Sample code integration plan (4 phases)
+7. Package.swift - Swift package configuration
 
 Read these files, then ask: What task should we work on?
 ```
