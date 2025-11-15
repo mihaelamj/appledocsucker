@@ -106,7 +106,7 @@ Implements the **Model Context Protocol** for AI integration:
 
 **Resources:**
 - `apple://documentation/*` - Read any documentation page
-- `evolution://SE-NNNN` - Read Swift Evolution proposals
+- `swift-evolution://{proposal-id}` - Read Swift Evolution proposals (e.g., `swift-evolution://0001`)
 
 **Tools:**
 - `search_docs` - Full-text search with BM25 ranking

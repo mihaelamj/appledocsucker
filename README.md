@@ -118,7 +118,7 @@ appledocsucker build-index
 
 **MCP Resources:**
 - `apple://documentation/*` - Read any Apple documentation page
-- `evolution://SE-NNNN` - Read Swift Evolution proposals
+- `swift-evolution://{proposal-id}` - Read Swift Evolution proposals (e.g., `swift-evolution://0001`)
 
 **MCP Tools (requires search index):**
 - `search_docs` - Search documentation by keywords

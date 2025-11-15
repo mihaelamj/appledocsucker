@@ -511,6 +511,7 @@ appledocsucker index-samples \
 
 ## Known Issues / Tech Debt
 
+- [ ] **Swift Evolution proposal listing bug** - DocsResourceProvider.swift:51 looks for `hasPrefix("SE-")` but actual files are named `0001-*.md`, `0002-*.md`, etc. (without "SE-" prefix). This means MCP resource listing returns zero proposals. Fix: Remove the "SE-" prefix check or adjust to match actual filenames.
 - [ ] SwiftLint type_body_length warning in HTMLToMarkdown.swift (disabled)
 - [ ] Error handling could be more granular
 - [ ] No retry logic for failed HTTP requests
