@@ -13,8 +13,8 @@ struct AppleDocsucker: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "appledocsucker",
         abstract: "Apple Documentation Crawler",
-        version: "0.1.0",
-        subcommands: [Crawl.self, CrawlEvolution.self, DownloadSamples.self, ExportPDF.self, Update.self, BuildIndex.self, Config.self],
+        version: "0.1.5",
+        subcommands: [Crawl.self, Resume.self, CrawlEvolution.self, DownloadSamples.self, ExportPDF.self, Update.self, BuildIndex.self, Config.self],
         defaultSubcommand: Crawl.self
     )
 }
@@ -38,28 +38,115 @@ extension AppleDocsucker {
         var maxDepth: Int = 15
 
         @Option(name: .long, help: "Output directory for documentation")
-        var outputDir: String = "~/.docsucker/docs"
+        var outputDir: String?
+
+        @Option(name: .long, help: "Log file path (appends crawl progress)")
+        var logFile: String?
+
+        @Option(name: .long, help: "Allowed URL prefixes (comma-separated). If not specified, auto-detects based on start URL")
+        var allowedPrefixes: String?
 
         @Flag(name: .long, help: "Force recrawl of all pages")
         var force: Bool = false
 
+        @Flag(name: .long, help: "Resume from saved session (auto-detects and continues)")
+        var resume: Bool = false
+
         mutating func run() async throws {
-            ConsoleLogger.info("🚀 AppleDocsucker - Apple Documentation Crawler\n")
+            if resume {
+                ConsoleLogger.info("🔄 AppleDocsucker - Resuming from saved session\n")
+            } else {
+                ConsoleLogger.info("🚀 AppleDocsucker - Apple Documentation Crawler\n")
+            }
 
             // Create configuration
             guard let startURL = URL(string: startURL) else {
                 throw ValidationError("Invalid start URL: \(startURL)")
             }
 
+            // Auto-detect output directory based on URL if not provided
+            let defaultOutputDir: String
+            if let outputDir {
+                // Explicitly provided
+                defaultOutputDir = outputDir
+            } else {
+                // Check for existing session to resume from
+                // First check common default locations
+                let homeDir = FileManager.default.homeDirectoryForCurrentUser
+                let defaultCandidates = [
+                    homeDir.appendingPathComponent(".docsucker/docs"),
+                    homeDir.appendingPathComponent(".docsucker/swift-org"),
+                    homeDir.appendingPathComponent(".docsucker/swift-book"),
+                ]
+
+                var foundSession: String?
+
+                // Helper function to check a metadata file
+                func checkMetadataFile(_ metadataFile: URL) -> String? {
+                    guard FileManager.default.fileExists(atPath: metadataFile.path) else { return nil }
+                    guard let data = try? Data(contentsOf: metadataFile),
+                          let metadata = try? JSONDecoder().decode(CrawlMetadata.self, from: data),
+                          let session = metadata.crawlState,
+                          session.isActive,
+                          session.startURL == startURL.absoluteString else { return nil }
+                    return session.outputDirectory
+                }
+
+                // Check default candidates first
+                for candidate in defaultCandidates {
+                    let metadataFile = candidate.appendingPathComponent("metadata.json")
+                    if let outputDir = checkMetadataFile(metadataFile) {
+                        foundSession = outputDir
+                        ConsoleLogger.info("📂 Found existing session, resuming to: \(outputDir)")
+                        break
+                    }
+                }
+
+                // If not found in defaults, check if metadata exists in other common crawl locations
+                // This handles custom --output-dir cases by checking previously used directories
+                if foundSession == nil {
+                    let docsuckerDir = homeDir.appendingPathComponent(".docsucker")
+                    if let contents = try? FileManager.default.contentsOfDirectory(
+                        at: docsuckerDir,
+                        includingPropertiesForKeys: [.isDirectoryKey],
+                        options: [.skipsHiddenFiles]
+                    ) {
+                        for dir in contents where (try? dir.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+                            let metadataFile = dir.appendingPathComponent("metadata.json")
+                            if let outputDir = checkMetadataFile(metadataFile) {
+                                foundSession = outputDir
+                                ConsoleLogger.info("📂 Found existing session, resuming to: \(outputDir)")
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if let foundSession {
+                    defaultOutputDir = foundSession
+                } else if startURL.host?.contains("swift.org") == true {
+                    defaultOutputDir = "~/.docsucker/swift-org"
+                } else {
+                    defaultOutputDir = "~/.docsucker/docs"
+                }
+            }
+
+            let outputDirectory = URL(fileURLWithPath: defaultOutputDir).expandingTildeInPath
+
+            // Parse allowed prefixes if provided
+            let prefixes: [String]? = allowedPrefixes?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) }
+
             let config = DocsuckerConfiguration(
                 crawler: CrawlerConfiguration(
                     startURL: startURL,
+                    allowedPrefixes: prefixes,
                     maxPages: maxPages,
                     maxDepth: maxDepth,
-                    outputDirectory: URL(fileURLWithPath: outputDir).expandingTildeInPath
+                    outputDirectory: outputDirectory
                 ),
                 changeDetection: ChangeDetectionConfiguration(
-                    forceRecrawl: force
+                    forceRecrawl: force,
+                    outputDirectory: outputDirectory
                 ),
                 output: OutputConfiguration(format: .markdown)
             )
@@ -69,6 +156,134 @@ extension AppleDocsucker {
 
             let stats = try await crawler.crawl { progress in
                 // Progress callback - use output() for frequent updates (no logging)
+                ConsoleLogger.output("   Progress: \(String(format: "%.1f", progress.percentage))% - \(progress.currentURL.lastPathComponent)")
+            }
+
+            ConsoleLogger.output("")
+            ConsoleLogger.info("✅ Crawl completed!")
+            ConsoleLogger.info("   Total: \(stats.totalPages) pages")
+            ConsoleLogger.info("   New: \(stats.newPages)")
+            ConsoleLogger.info("   Updated: \(stats.updatedPages)")
+            ConsoleLogger.info("   Skipped: \(stats.skippedPages)")
+            if let duration = stats.duration {
+                ConsoleLogger.info("   Duration: \(Int(duration))s")
+            }
+        }
+    }
+}
+
+// MARK: - Resume Command
+
+extension AppleDocsucker {
+    @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
+    struct Resume: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Resume an interrupted crawl from saved session"
+        )
+
+        @Option(name: .long, help: "Output directory to resume (auto-detects if not provided)")
+        var outputDir: String?
+
+        @Option(name: .long, help: "Maximum number of pages to crawl")
+        var maxPages: Int?
+
+        @Option(name: .long, help: "Maximum crawl depth")
+        var maxDepth: Int?
+
+        mutating func run() async throws {
+            ConsoleLogger.info("🔄 Resume Crawl\n")
+
+            // Determine output directory
+            let outputURL: URL
+            if let outputDir {
+                outputURL = URL(fileURLWithPath: outputDir).expandingTildeInPath
+            } else {
+                // Scan common directories for active sessions
+                let homeDir = FileManager.default.homeDirectoryForCurrentUser
+                let candidates = [
+                    homeDir.appendingPathComponent(".docsucker/docs"),
+                    homeDir.appendingPathComponent(".docsucker/swift-org"),
+                    homeDir.appendingPathComponent(".docsucker/swift-book"),
+                ]
+
+                var foundSessions: [(URL, URL)] = [] // (outputDir, metadataFile)
+                for candidate in candidates {
+                    let metadataFile = candidate.appendingPathComponent("metadata.json")
+                    if FileManager.default.fileExists(atPath: metadataFile.path) {
+                        foundSessions.append((candidate, metadataFile))
+                    }
+                }
+
+                if foundSessions.isEmpty {
+                    ConsoleLogger.error("❌ No active crawl sessions found")
+                    ConsoleLogger.info("Searched in:")
+                    for candidate in candidates {
+                        ConsoleLogger.info("  • \(candidate.path)")
+                    }
+                    throw ExitCode.failure
+                }
+
+                if foundSessions.count == 1 {
+                    outputURL = foundSessions[0].0
+                    ConsoleLogger.info("Found session: \(outputURL.lastPathComponent)")
+                } else {
+                    ConsoleLogger.info("Multiple sessions found:")
+                    for (index, (dir, _)) in foundSessions.enumerated() {
+                        ConsoleLogger.info("  \(index + 1). \(dir.lastPathComponent) (\(dir.path))")
+                    }
+                    ConsoleLogger.error("❌ Please specify --output-dir to choose which session to resume")
+                    throw ExitCode.failure
+                }
+            }
+
+            // Load metadata to get the start URL
+            let metadataFile = outputURL.appendingPathComponent("metadata.json")
+            guard FileManager.default.fileExists(atPath: metadataFile.path) else {
+                ConsoleLogger.error("❌ No metadata.json found in \(outputURL.path)")
+                ConsoleLogger.info("This directory has no saved crawl session to resume")
+                throw ExitCode.failure
+            }
+
+            // Read metadata to extract start URL
+            let metadataData = try Data(contentsOf: metadataFile)
+            let metadata = try JSONDecoder().decode(CrawlMetadata.self, from: metadataData)
+
+            guard let crawlState = metadata.crawlState else {
+                ConsoleLogger.error("❌ No crawl state found in metadata")
+                throw ExitCode.failure
+            }
+
+            guard let startURL = URL(string: crawlState.startURL) else {
+                ConsoleLogger.error("❌ Invalid start URL: \(crawlState.startURL)")
+                throw ExitCode.failure
+            }
+
+            ConsoleLogger.info("Resuming crawl:")
+            ConsoleLogger.info("  Start URL: \(startURL.absoluteString)")
+            ConsoleLogger.info("  Output: \(outputURL.path)")
+            ConsoleLogger.info("  Visited: \(crawlState.visited.count) pages")
+            ConsoleLogger.info("  Queued: \(crawlState.queue.count) pages")
+            ConsoleLogger.output("")
+
+            // Create configuration
+            let config = DocsuckerConfiguration(
+                crawler: CrawlerConfiguration(
+                    startURL: startURL,
+                    maxPages: maxPages ?? 15000,
+                    maxDepth: maxDepth ?? 15,
+                    outputDirectory: outputURL
+                ),
+                changeDetection: ChangeDetectionConfiguration(
+                    forceRecrawl: false,
+                    outputDirectory: outputURL
+                ),
+                output: OutputConfiguration(format: .markdown)
+            )
+
+            // Create and run crawler (will auto-resume from saved state)
+            let crawler = await DocumentationCrawler(configuration: config)
+
+            let stats = try await crawler.crawl { progress in
                 ConsoleLogger.output("   Progress: \(String(format: "%.1f", progress.percentage))% - \(progress.currentURL.lastPathComponent)")
             }
 

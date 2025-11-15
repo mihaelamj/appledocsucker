@@ -135,12 +135,13 @@ Data Pipeline:
 4. MCP: AI agent → search_docs → JSON results
 
 Current Crawl Status:
-- Started: Nov 15, 12:00 AM
-- Rate: ~606 pages/hour
-- Target: ~13,000 pages total
-- ETA: ~21 hours (Nov 15, 9:30 PM)
-- Command: appledocsucker --start-url https://developer.apple.com/documentation/swift --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force
-- Check progress: bash /tmp/check-crawl-progress.sh
+- Started: Nov 14, 2024 12:00 AM
+- Killed: Nov 15, 2024 ~7:45 PM (at page 12,661, depth=4 in Accelerate)
+- Resumed: Nov 15, 2024 ~7:47 PM from Accelerate framework
+- Current pages: 11,331 (73MB)
+- Current command: appledocsucker crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force
+- Status: Running in background (bash_id: 40ae3f)
+- Note: Using `--force` to rediscover pages, SHA256 change detection skips unchanged ones
 
 Completed:
 ✅ CLI crawler with resume capability

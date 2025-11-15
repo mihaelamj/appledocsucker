@@ -17,7 +17,7 @@ struct AppleDocsuckerMCP: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "appledocsucker-mcp",
         abstract: "MCP Server for Apple Documentation and Swift Evolution",
-        version: "0.1.0",
+        version: "0.1.5",
         subcommands: [Serve.self],
         defaultSubcommand: Serve.self
     )
@@ -51,7 +51,7 @@ extension AppleDocsuckerMCP {
             let evolutionURL = URL(fileURLWithPath: evolutionDir).expandingTildeInPath
             let searchDBURL = URL(fileURLWithPath: searchDB).expandingTildeInPath
 
-            let server = MCPServer(name: "docsucker", version: "0.1.0")
+            let server = MCPServer(name: "docsucker", version: "0.1.5")
 
             await registerProviders(
                 server: server,

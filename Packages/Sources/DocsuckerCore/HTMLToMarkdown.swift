@@ -5,8 +5,8 @@ import WebKit
 
 // MARK: - HTML to Markdown Converter
 
-/// Converts HTML documentation to clean Markdown
 // swiftlint:disable type_body_length
+// Converts HTML documentation to clean Markdown
 public enum HTMLToMarkdown {
     /// Convert HTML string to Markdown
     public static func convert(_ html: String, url: URL) -> String {

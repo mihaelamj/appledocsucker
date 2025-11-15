@@ -1,6 +1,6 @@
+import DocsuckerLogging
 import Foundation
 import WebKit
-import DocsuckerLogging
 #if canImport(AppKit)
 import AppKit
 #endif
@@ -103,7 +103,7 @@ public final class PDFExporter {
         let outputPath = outputDirectory.appendingPathComponent(relativePath).deletingPathExtension().appendingPathExtension("pdf")
 
         // Check if already exists
-        if !forceExport && FileManager.default.fileExists(atPath: outputPath.path) {
+        if !forceExport, FileManager.default.fileExists(atPath: outputPath.path) {
             stats.skippedFiles += 1
             stats.totalFiles += 1
             logInfo("   ⏭️  Already exists, skipping")

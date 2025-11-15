@@ -95,8 +95,8 @@ public final class SwiftEvolutionCrawler {
         // Filter for .md files and extract proposal metadata
         let proposals = files
             .compactMap { file -> ProposalMetadata? in
-                // Skip if no download_url (e.g., directories)
-                guard let downloadURL = file.download_url else {
+                // Skip if no downloadURL (e.g., directories)
+                guard let downloadURL = file.downloadURL else {
                     return nil
                 }
                 // Only process .md files
@@ -243,7 +243,12 @@ public final class SwiftEvolutionCrawler {
 
 struct GitHubFile: Codable {
     let name: String
-    let download_url: String? // Optional - directories have null download_url
+    let downloadURL: String? // Optional - directories have null download_url
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case downloadURL = "download_url"
+    }
 }
 
 struct ProposalMetadata {

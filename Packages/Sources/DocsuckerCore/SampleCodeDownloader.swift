@@ -1,12 +1,14 @@
+import DocsuckerLogging
+import DocsuckerShared
 import Foundation
 import WebKit
-import DocsuckerShared
-import DocsuckerLogging
 #if canImport(AppKit)
 import AppKit
 #endif
 
 // MARK: - Sample Code Downloader
+
+// swiftlint:disable type_body_length function_body_length
 
 /// Downloads Apple sample code projects (zip/tar files)
 @MainActor
@@ -27,7 +29,7 @@ public final class SampleCodeDownloader {
         self.visibleBrowser = visibleBrowser
 
         // Store cookies in output directory
-        self.cookiesPath = outputDirectory.appendingPathComponent(".auth-cookies.json")
+        cookiesPath = outputDirectory.appendingPathComponent(".auth-cookies.json")
     }
 
     // MARK: - Public API
@@ -187,7 +189,7 @@ public final class SampleCodeDownloader {
         let existingFiles = try? FileManager.default.contentsOfDirectory(at: outputDirectory, includingPropertiesForKeys: nil)
             .filter { $0.lastPathComponent.hasPrefix(sample.slug) }
 
-        if !forceDownload && !(existingFiles?.isEmpty ?? true) {
+        if !forceDownload, !(existingFiles?.isEmpty ?? true) {
             stats.skippedSamples += 1
             stats.totalSamples += 1
             logInfo("   ⏭️  Already exists, skipping")
@@ -324,7 +326,7 @@ public final class SampleCodeDownloader {
         }
 
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .default()  // Use default to persist cookies
+        config.websiteDataStore = .default() // Use default to persist cookies
 
         #if os(macOS)
         let frame: CGRect
@@ -372,7 +374,7 @@ public final class SampleCodeDownloader {
             window.title = "Apple Developer Sign In"
             window.contentView = webView
             window.center()
-            window.isReleasedWhenClosed = false  // Important: keep window alive
+            window.isReleasedWhenClosed = false // Important: keep window alive
 
             // Load Apple Developer login page
             let loginURL = URL(string: "https://developer.apple.com/account/")!
@@ -414,7 +416,7 @@ public final class SampleCodeDownloader {
                     .name: cookieInfo.name,
                     .value: cookieInfo.value,
                     .domain: cookieInfo.domain,
-                    .path: cookieInfo.path
+                    .path: cookieInfo.path,
                 ]
 
                 if let expiresDate = cookieInfo.expiresDate {

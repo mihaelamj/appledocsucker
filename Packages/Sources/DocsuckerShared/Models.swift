@@ -1,5 +1,5 @@
-import Foundation
 import CryptoKit
+import Foundation
 
 // MARK: - Documentation Page
 
@@ -42,15 +42,18 @@ public struct CrawlMetadata: Codable, Sendable {
     public var pages: [String: PageMetadata] // URL -> metadata
     public var lastCrawl: Date?
     public var stats: CrawlStatistics
+    public var crawlState: CrawlSessionState? // Resume state
 
     public init(
         pages: [String: PageMetadata] = [:],
         lastCrawl: Date? = nil,
-        stats: CrawlStatistics = CrawlStatistics()
+        stats: CrawlStatistics = CrawlStatistics(),
+        crawlState: CrawlSessionState? = nil
     ) {
         self.pages = pages
         self.lastCrawl = lastCrawl
         self.stats = stats
+        self.crawlState = crawlState
     }
 
     /// Save metadata to file
@@ -176,26 +179,86 @@ public enum URLUtilities {
         return components?.url
     }
 
-    /// Extract framework name from Apple documentation URL
+    /// Extract framework name from documentation URL (Apple or Swift.org)
     public static func extractFramework(from url: URL) -> String {
         let pathComponents = url.pathComponents
+
+        // Handle docs.swift.org URLs (e.g., /swift-book/documentation/the-swift-programming-language/*)
+        if url.host?.contains("swift.org") == true {
+            if pathComponents.contains("swift-book") {
+                return "swift-book"
+            }
+            return "swift-org"
+        }
+
+        // Handle developer.apple.com URLs (e.g., /documentation/swiftui/*)
         if let docIndex = pathComponents.firstIndex(of: "documentation"),
-           docIndex + 1 < pathComponents.count
-        {
+           docIndex + 1 < pathComponents.count {
             return pathComponents[docIndex + 1].lowercased()
         }
+
         return "root"
     }
 
     /// Generate filename from URL
     public static func filename(from url: URL) -> String {
-        let cleaned = url.absoluteString
+        var cleaned = url.absoluteString
+
+        // Remove known domain prefixes
+        cleaned = cleaned
             .replacingOccurrences(of: "https://developer.apple.com/", with: "")
+            .replacingOccurrences(of: "https://docs.swift.org/", with: "")
+            .replacingOccurrences(of: "https://www.swift.org/", with: "")
+
+        // Normalize to safe filename
+        cleaned = cleaned
             .lowercased()
             .replacingOccurrences(of: "[^a-z0-9._-]+", with: "_", options: .regularExpression)
             .replacingOccurrences(of: "_+", with: "_", options: .regularExpression)
             .replacingOccurrences(of: "^_+|_+$", with: "", options: .regularExpression)
 
         return cleaned.isEmpty ? "index" : cleaned
+    }
+}
+
+// MARK: - Crawl Session State
+
+/// Represents the complete state of a crawl session for resuming
+public struct CrawlSessionState: Codable, Sendable {
+    public var visited: Set<String> // Visited URL strings
+    public var queue: [QueuedURL] // Pending URLs to crawl
+    public var startURL: String
+    public var outputDirectory: String // Where files are being saved
+    public var sessionStartTime: Date
+    public var lastSaveTime: Date
+    public var isActive: Bool
+
+    public init(
+        visited: Set<String> = [],
+        queue: [QueuedURL] = [],
+        startURL: String,
+        outputDirectory: String,
+        sessionStartTime: Date = Date(),
+        lastSaveTime: Date = Date(),
+        isActive: Bool = true
+    ) {
+        self.visited = visited
+        self.queue = queue
+        self.startURL = startURL
+        self.outputDirectory = outputDirectory
+        self.sessionStartTime = sessionStartTime
+        self.lastSaveTime = lastSaveTime
+        self.isActive = isActive
+    }
+}
+
+/// Represents a URL in the crawl queue with depth information
+public struct QueuedURL: Codable, Sendable, Hashable {
+    public let url: String
+    public let depth: Int
+
+    public init(url: String, depth: Int) {
+        self.url = url
+        self.depth = depth
     }
 }

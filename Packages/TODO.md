@@ -32,12 +32,13 @@ claude code --continue
 ## Current Status
 
 **In Progress:**
-- ⏳ **Documentation Crawl** - Currently at ~10,099+ pages (growing)
-  - Started: Nov 14, 2024 12:00 AM
-  - ETA: Nov 15, 2024 ~10 PM (tonight)
-  - Duration: ~22 hours total
-  - Command: `appledocsucker --start-url https://developer.apple.com/documentation/swift --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force`
-  - Status: Crawling depth=3 API methods (e.g., Array.dropFirst(), Collection.firstIndex())
+- ⏳ **Documentation Crawl** - Currently at 11,331 pages (73MB) - resumed after interruption
+  - Original crawl started: Nov 14, 2024 12:00 AM
+  - Original crawl killed at: Nov 15, 2024 ~7:45 PM (at page 12,661, depth=4 in Accelerate)
+  - Resumed: Nov 15, 2024 ~7:47 PM from Accelerate framework
+  - Current command: `appledocsucker crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force`
+  - Status: Running in background (bash_id: 40ae3f), skipping unchanged pages via SHA256 detection
+  - Note: No crawl state persistence - using `--force` to rediscover pages and skip unchanged ones
 
 **Completed:**
 - ✅ CLI crawler with resume capability
@@ -195,6 +196,16 @@ claude code --continue
 **Estimated Time:** 12-15 hours
 
 ### Phase 3a: Research & Planning (2 hours)
+- [ ] **Add Swift.org documentation crawling** - Found https://www.swift.org/documentation/ which has official Swift language guide, server guides, and more. Should be crawled and indexed separately from Apple Developer docs.
+  - **The Swift Programming Language (TSPL):** ~43 markdown files
+    - LanguageGuide: 29 files (TheBasics, ControlFlow, Functions, Closures, Enumerations, etc.)
+    - ReferenceManual: 10 files (LexicalStructure, Types, Expressions, Statements, etc.)
+    - GuidedTour: 3 files (AboutSwift, Compatibility, GuidedTour)
+    - Root: 1 file (The-Swift-Programming-Language.md)
+  - **Additional Swift.org docs:** ~20+ articles/guides (Server-side Swift, C++ interop, DocC, etc.)
+  - **Source:** https://github.com/swiftlang/swift-book (DocC-based, published at docs.swift.org)
+  - **Estimated total:** ~60-80 pages to crawl from Swift.org ecosystem
+  - **Crawl time estimate:** ~30-40 seconds (60-80 pages × 0.5s delay) + rendering time = ~5-10 minutes
 - [ ] Run package analysis script:
   ```bash
   cd /Volumes/Code/DeveloperExt/appledocsucker

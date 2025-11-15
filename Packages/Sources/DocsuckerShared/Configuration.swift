@@ -9,24 +9,50 @@ public struct CrawlerConfiguration: Codable, Sendable {
     public let maxPages: Int
     public let maxDepth: Int
     public let outputDirectory: URL
+    public let logFile: URL?
     public let requestDelay: TimeInterval
     public let retryAttempts: Int
 
     public init(
         startURL: URL = URL(string: "https://developer.apple.com/documentation/")!,
-        allowedPrefixes: [String] = ["https://developer.apple.com/documentation"],
+        allowedPrefixes: [String]? = nil,
         maxPages: Int = 15000,
         maxDepth: Int = 15,
         outputDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".docsucker/docs"),
+        logFile: URL? = nil,
         requestDelay: TimeInterval = 0.5,
         retryAttempts: Int = 3
     ) {
         self.startURL = startURL
-        self.allowedPrefixes = allowedPrefixes
+
+        // Auto-detect allowed prefixes based on start URL if not provided
+        if let allowedPrefixes {
+            self.allowedPrefixes = allowedPrefixes
+        } else if let host = startURL.host {
+            // Build prefix from scheme + host
+            let scheme = startURL.scheme ?? "https"
+            let basePrefix = "\(scheme)://\(host)"
+
+            // Add common documentation paths based on host
+            if host.contains("swift.org") {
+                // Allow entire swift.org domain - user can curate via start URL
+                self.allowedPrefixes = [basePrefix]
+            } else if host.contains("apple.com") {
+                self.allowedPrefixes = ["\(basePrefix)/documentation"]
+            } else {
+                // Generic: allow entire host
+                self.allowedPrefixes = [basePrefix]
+            }
+        } else {
+            // Fallback to Apple docs
+            self.allowedPrefixes = ["https://developer.apple.com/documentation"]
+        }
+
         self.maxPages = maxPages
         self.maxDepth = maxDepth
         self.outputDirectory = outputDirectory
+        self.logFile = logFile
         self.requestDelay = requestDelay
         self.retryAttempts = retryAttempts
     }
@@ -57,12 +83,26 @@ public struct ChangeDetectionConfiguration: Codable, Sendable {
 
     public init(
         enabled: Bool = true,
-        metadataFile: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".docsucker/metadata.json"),
-        forceRecrawl: Bool = false
+        metadataFile: URL? = nil,
+        forceRecrawl: Bool = false,
+        outputDirectory: URL? = nil
     ) {
         self.enabled = enabled
-        self.metadataFile = metadataFile
+
+        // If metadataFile is provided, use it
+        // Otherwise, derive from outputDirectory (per-directory metadata)
+        // Fall back to global metadata file if neither is provided
+        if let metadataFile {
+            self.metadataFile = metadataFile
+        } else if let outputDirectory {
+            // Store metadata.json in the output directory itself
+            self.metadataFile = outputDirectory.appendingPathComponent("metadata.json")
+        } else {
+            // Global fallback
+            self.metadataFile = FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(".docsucker/metadata.json")
+        }
+
         self.forceRecrawl = forceRecrawl
     }
 }

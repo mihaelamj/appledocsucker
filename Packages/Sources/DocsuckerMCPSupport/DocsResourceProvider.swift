@@ -1,7 +1,7 @@
+import DocsuckerShared
 import Foundation
 import MCPServer
 import MCPShared
-import DocsuckerShared
 
 // MARK: - Documentation Resource Provider
 
@@ -155,7 +155,7 @@ public actor DocsResourceProvider: ResourceProvider {
         }
 
         do {
-            self.metadata = try CrawlMetadata.load(from: metadataURL)
+            metadata = try CrawlMetadata.load(from: metadataURL)
         } catch {
             print("⚠️  Failed to load metadata: \(error)")
         }
