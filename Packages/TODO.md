@@ -394,11 +394,29 @@ appledocsucker update  # Downloads all changes
 ## Phase 7: Documentation & Polish
 
 **Priority: LOW**
-**Estimated Time:** 3-4 hours
+**Estimated Time:** 4-6 hours
 
+### Phase 7a: README Enhancements (2-3 hours)
+- [ ] Add GitHub badges to README.md:
+  - Swift version badge (Swift 6.2)
+  - Platform badges (macOS 10.15+, macCatalyst 13+, etc.)
+  - Build status badge (from GitHub Actions)
+  - License badge (MIT)
+  - Latest release badge
 - [ ] Update README.md with full feature list
-- [ ] Create user guide
 - [ ] Add screenshots/demo video
+- [ ] Create user guide section
+
+### Phase 7b: GitHub Actions Setup (1-2 hours)
+- [ ] Create `.github/workflows/build.yml` for CI/CD
+- [ ] Automated build on push to main
+- [ ] SwiftLint checks on PRs
+- [ ] Automated tests
+- [ ] Create `.github/workflows/daily-check.yml` for automated doc checks
+- [ ] Optional: Daily automated crawl (check mode only)
+- [ ] Generate automated reports of documentation changes
+
+### Phase 7c: Documentation (1 hour)
 - [ ] Document MCP tools for AI agents
 - [ ] Create troubleshooting guide
 - [ ] Write blog post / announcement
