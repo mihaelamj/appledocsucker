@@ -1,9 +1,21 @@
 # Sample Code Integration Plan
 
+## IMPORTANT: Apple Sample Code Download Constraints
+
+**⚠️ CRITICAL:** Apple sample code downloads require Apple ID login - cannot be automated!
+
+**Implications:**
+- Cannot re-download samples programmatically
+- Must keep existing .zip files (27GB)
+- Cannot build automatic sample fetching for missing samples
+- For new samples: users must manually download from developer.apple.com
+- Search results should indicate: "Locally available" vs "Manual download required"
+- Where possible, find GitHub URLs (some samples are open source on GitHub)
+
 ## Current State Analysis
 
 **What we have:**
-- 607 sample code projects downloaded as .zip files
+- 607 sample code projects downloaded as .zip files (manually downloaded)
 - Filenames follow pattern: `{framework}-{description}.zip`
   - Example: `accelerate-blurring-an-image.zip`
   - Framework prefix helps categorization
@@ -11,6 +23,7 @@
 - Zips contain full Xcode projects with .git history
 - Documentation pages reference sample code projects
 - Total size: ~27GB compressed
+- **Cannot delete .zip files** - no way to re-download without manual login
 
 **Filename Structure Insights:**
 - Framework prefix (accelerate, swiftui, avfoundation, etc.)
@@ -21,16 +34,23 @@
 
 ### 1. **Should agents get zipped or unzipped code?**
 
-**Decision: EXTRACT ALL** ✅
-- External SSD has 1.6TB free space
-- Fast access for agents (no extraction delay)
-- Can grep/search across all code
-- Better developer experience
+**Decision: HYBRID APPROACH** ✅
+- Index README summaries from all samples
+- Keep .zip files (cannot re-download without Apple ID login)
+- Track local availability + GitHub URLs in database
+- For actually using samples: agents can extract on-demand from local .zips
+
+**Why not extract all?**
+- 607 samples × ~70MB average = ~40-50GB extracted
+- Most samples won't be accessed frequently
+- Can extract on-demand when needed
+- README indexing provides searchability
 
 **Storage:**
-- Keep .zip files (canonical source, for re-download)
-- Extract all to `sample-code-extracted/`
-- Strip `.git` directories to save space
+- Keep .zip files (~27GB) - CANNOT delete, no way to re-download
+- Index README summaries in database (<1GB)
+- Track: locally_available, apple_docs_url, github_url
+- Extract on-demand to temp location when agents request code
 
 ### 2. **How to link samples to documentation?**
 
@@ -329,6 +349,270 @@ appledocsucker build-index \
 3. Add `samples` table to SearchIndex
 4. Add MCP search_samples tool
 5. Test with agent queries
+6. Implement delta tracking for documentation changes
+7. Add popular Swift package documentation (SwiftPackageIndex.com integration)
+
+---
+
+## Phase 6: Delta Tracking & Change Detection
+
+**Goal:** Track documentation changes over time to identify new, updated, and removed pages.
+
+**Location:** `/Volumes/Code/DeveloperExt/appledocsucker/deltas/`
+
+### Delta File Structure
+
+```
+/Volumes/Code/DeveloperExt/appledocsucker/
+├── deltas/
+│   ├── snapshots/
+│   │   ├── 2024-11-15.json          # Full snapshot of crawl
+│   │   ├── 2024-11-20.json          # Next crawl snapshot
+│   │   └── 2024-12-01.json
+│   ├── changes/
+│   │   ├── 2024-11-15_to_2024-11-20.json  # Delta between crawls
+│   │   └── 2024-11-20_to_2024-12-01.json
+│   └── latest.json                  # Symlink to most recent snapshot
+```
+
+### Snapshot Format
+
+```json
+{
+  "crawl_date": "2024-11-15T03:10:55Z",
+  "total_pages": 13414,
+  "pages": [
+    {
+      "uri": "swift://documentation/swift",
+      "path": "docs/swift/documentation_swift.md",
+      "content_hash": "sha256:abc123...",
+      "file_size": 6004,
+      "last_modified": "2024-11-15T00:00:00Z",
+      "framework": "swift",
+      "title": "Swift"
+    }
+  ],
+  "frameworks": {
+    "swift": 1234,
+    "uikit": 567,
+    "swiftui": 890
+  }
+}
+```
+
+### Delta Format
+
+```json
+{
+  "from_date": "2024-11-15T03:10:55Z",
+  "to_date": "2024-11-20T10:00:00Z",
+  "summary": {
+    "added": 45,
+    "modified": 123,
+    "removed": 12,
+    "unchanged": 13234
+  },
+  "added": [
+    {
+      "uri": "swift://documentation/swift/new-feature",
+      "path": "docs/swift/documentation_swift_new-feature.md",
+      "framework": "swift",
+      "title": "New Feature",
+      "added_date": "2024-11-20T10:00:00Z"
+    }
+  ],
+  "modified": [
+    {
+      "uri": "swift://documentation/swift/updated-api",
+      "old_hash": "sha256:abc123...",
+      "new_hash": "sha256:def456...",
+      "changes": "Content updated",
+      "modified_date": "2024-11-20T10:00:00Z"
+    }
+  ],
+  "removed": [
+    {
+      "uri": "swift://documentation/swift/deprecated-api",
+      "path": "docs/swift/documentation_swift_deprecated-api.md",
+      "framework": "swift",
+      "removed_date": "2024-11-20T10:00:00Z",
+      "reason": "Page no longer exists"
+    }
+  ]
+}
+```
+
+### Implementation
+
+#### 1. Add to `SearchIndex.swift`
+
+```swift
+func createSnapshot(outputPath: String) async throws {
+    let snapshot = CrawlSnapshot(
+        crawlDate: Date(),
+        totalPages: /* count */,
+        pages: /* all pages */,
+        frameworks: /* framework counts */
+    )
+
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+    let data = try encoder.encode(snapshot)
+    try data.write(to: URL(fileURLWithPath: outputPath))
+}
+```
+
+#### 2. Add to `appledocsucker build-index` command
+
+```bash
+appledocsucker build-index \
+  --docs-dir /path/to/docs \
+  --search-db /path/to/search.db \
+  --create-snapshot /path/to/deltas/snapshots/2024-11-15.json
+```
+
+#### 3. Add `appledocsucker compare` command
+
+```bash
+# Compare two snapshots
+appledocsucker compare \
+  --from deltas/snapshots/2024-11-15.json \
+  --to deltas/snapshots/2024-11-20.json \
+  --output deltas/changes/2024-11-15_to_2024-11-20.json
+
+# Compare against latest
+appledocsucker compare \
+  --from deltas/latest.json \
+  --to deltas/snapshots/2024-11-20.json \
+  --auto-output
+```
+
+#### 4. Add to MCP Server
+
+```swift
+// New MCP tool: get_documentation_changes
+func getDocumentationChanges(since: String?) async throws -> [Change] {
+    // Read latest delta file
+    // Return changes since date or last N changes
+}
+```
+
+### Use Cases
+
+**For Users:**
+- "What changed in Apple docs this week?"
+- "Show me new Swift Evolution proposals"
+- "Which APIs were updated?"
+
+**For AI Agents:**
+- Proactively notify about relevant changes
+- Track API evolution over time
+- Identify deprecated features
+
+**For Automation:**
+- Weekly email digest of changes
+- RSS feed of documentation updates
+- Changelog generation
+
+### MCP Tool: `get_documentation_changes`
+
+```typescript
+{
+  "name": "get_documentation_changes",
+  "description": "Get documentation changes between crawls",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "since": {
+        "type": "string",
+        "description": "ISO date or 'latest' for last delta"
+      },
+      "framework": {
+        "type": "string",
+        "description": "Filter by framework (optional)"
+      },
+      "change_type": {
+        "type": "string",
+        "enum": ["added", "modified", "removed", "all"],
+        "default": "all"
+      }
+    }
+  }
+}
+```
+
+### Automation Script
+
+```bash
+#!/bin/bash
+# /usr/local/bin/appledocsucker-daily-crawl
+
+DATE=$(date +%Y-%m-%d)
+SNAPSHOT="/Volumes/Code/DeveloperExt/appledocsucker/deltas/snapshots/${DATE}.json"
+LATEST="/Volumes/Code/DeveloperExt/appledocsucker/deltas/latest.json"
+
+# Crawl documentation
+appledocsucker crawl \
+  --start-url https://developer.apple.com/documentation \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
+  --max-pages 20000
+
+# Build index and create snapshot
+appledocsucker build-index \
+  --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
+  --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db \
+  --create-snapshot "$SNAPSHOT"
+
+# Compare with previous crawl
+if [ -f "$LATEST" ]; then
+  appledocsucker compare \
+    --from "$LATEST" \
+    --to "$SNAPSHOT" \
+    --auto-output
+fi
+
+# Update latest symlink
+ln -sf "$SNAPSHOT" "$LATEST"
+
+# Notify if changes found
+CHANGES=$(jq '.summary.added + .summary.modified + .summary.removed' \
+  "deltas/changes/${DATE}.json")
+
+if [ "$CHANGES" -gt 0 ]; then
+  echo "📊 Documentation changes: $CHANGES"
+  # Send notification, email, etc.
+fi
+```
+
+### Database Schema Addition
+
+```sql
+-- Track crawl history
+CREATE TABLE crawl_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    crawl_date INTEGER NOT NULL,
+    snapshot_path TEXT NOT NULL,
+    total_pages INTEGER NOT NULL,
+    pages_added INTEGER,
+    pages_modified INTEGER,
+    pages_removed INTEGER,
+    delta_path TEXT
+);
+
+CREATE INDEX idx_crawl_date ON crawl_history(crawl_date DESC);
+```
+
+### Estimated Effort
+
+- **Snapshot generation:** 1-2 hours (integrate with build-index)
+- **Compare command:** 2-3 hours (delta calculation logic)
+- **MCP tool:** 1 hour (expose deltas to agents)
+- **Automation script:** 30 minutes
+- **Testing:** 1 hour
+
+**Total: 5-7 hours**
 
 ---
 
@@ -337,3 +621,552 @@ appledocsucker build-index \
 - Extract on-demand to avoid 27GB+ extraction
 - READMEs provide 80% of value with 1% of space
 - Code access available but not required for initial value
+- **Delta tracking enables change monitoring and API evolution tracking**
+
+---
+
+## Phase 7: Third-Party Swift Package Documentation
+
+**Goal:** Index documentation from popular Swift packages to provide comprehensive Swift ecosystem coverage.
+
+**Source:** https://swiftpackageindex.com
+
+### Popular Packages to Index
+
+**Server-Side Swift:**
+- Vapor (web framework)
+- Hummingbird (lightweight web framework)
+- Swift NIO (async networking)
+- Fluent (ORM)
+
+**CLI Tools:**
+- Swift Argument Parser
+- Swift Log
+- Swift Metrics
+
+**Testing:**
+- Quick/Nimble
+- SnapshotTesting
+
+**Networking:**
+- Alamofire
+- Moya
+
+**Data:**
+- SwiftyJSON
+- Codable extensions
+
+**UI (iOS/macOS):**
+- SnapKit (Auto Layout)
+- Kingfisher (image loading)
+- SwiftGen (code generation)
+
+### Documentation Sources
+
+Swift packages can have documentation in multiple formats:
+
+1. **DocC Archives** (`.doccarchive`)
+   - Modern Swift documentation format
+   - Best case: hosted on GitHub Pages or package website
+   - Example: `https://swiftpackageindex.com/vapor/vapor/documentation`
+
+2. **README + Inline Comments**
+   - Extract from GitHub repository
+   - Parse markdown README
+   - Generate docs from source comments
+
+3. **Hosted Documentation Sites**
+   - Vapor: https://docs.vapor.codes
+   - Hummingbird: https://hummingbird-project.github.io/hummingbird-docs
+   - Custom documentation sites
+
+### Implementation Strategy
+
+#### Option 1: SwiftPackageIndex API (Recommended)
+
+SwiftPackageIndex provides documentation URLs for packages:
+
+```swift
+struct PackageInfo: Codable {
+    let name: String
+    let owner: String
+    let repository: String
+    let documentationURL: String?
+    let stars: Int
+    let lastActivityAt: Date
+}
+
+func fetchTopPackages(limit: Int = 100) async throws -> [PackageInfo] {
+    // Query SwiftPackageIndex API or scrape rankings
+    // Filter by: stars > 1000, has documentation
+}
+```
+
+#### Option 2: Direct Crawling
+
+For each package:
+
+1. **Check for DocC archive**
+   ```
+   https://swiftpackageindex.com/{owner}/{repo}/documentation/
+   ```
+
+2. **Check GitHub Pages**
+   ```
+   https://{owner}.github.io/{repo}/documentation/
+   ```
+
+3. **Check custom docs site**
+   ```
+   // Parse package README for documentation link
+   ```
+
+4. **Fallback: Generate from README**
+   ```swift
+   // Fetch README.md from GitHub
+   // Convert to documentation format
+   ```
+
+### Directory Structure
+
+```
+/Volumes/Code/DeveloperExt/appledocsucker/
+├── third-party/
+│   ├── vapor/
+│   │   ├── vapor/              # Main package
+│   │   ├── fluent/
+│   │   └── leaf/
+│   ├── hummingbird/
+│   │   └── hummingbird/
+│   ├── apple/
+│   │   ├── swift-argument-parser/
+│   │   ├── swift-nio/
+│   │   └── swift-log/
+│   └── alamofire/
+│       └── alamofire/
+```
+
+### Search Index Integration
+
+Add to `search.db`:
+
+```sql
+-- Add source type
+ALTER TABLE docs_metadata ADD COLUMN source_type TEXT DEFAULT 'apple';
+-- Values: 'apple', 'swift-evolution', 'third-party'
+
+-- Add package metadata
+CREATE TABLE packages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    owner TEXT NOT NULL,
+    repository_url TEXT NOT NULL,
+    documentation_url TEXT,
+    stars INTEGER,
+    last_updated INTEGER,
+    UNIQUE(owner, name)
+);
+
+-- Link docs to packages
+ALTER TABLE docs_metadata ADD COLUMN package_id INTEGER REFERENCES packages(id);
+```
+
+### MCP Tool: `search_package_docs`
+
+```typescript
+{
+  "name": "search_package_docs",
+  "description": "Search community-maintained Swift package documentation. IMPORTANT: These are third-party packages NOT created or maintained by Apple. Results include popular open-source Swift libraries like Vapor, Hummingbird, Alamofire, etc.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Search query"
+      },
+      "package": {
+        "type": "string",
+        "description": "Filter by package name (e.g., 'vapor', 'hummingbird')"
+      },
+      "limit": {
+        "type": "number",
+        "default": 10
+      }
+    },
+    "required": ["query"]
+  }
+}
+```
+
+### MCP Response Format
+
+All search results should clearly indicate the source:
+
+```json
+{
+  "results": [
+    {
+      "title": "Routing",
+      "framework": "vapor",
+      "source": "community",
+      "source_label": "Community Package: vapor/vapor",
+      "package_url": "https://github.com/vapor/vapor",
+      "stars": 24000,
+      "description": "...",
+      "content": "...",
+      "disclaimer": "This is a community-maintained package, not an official Apple framework."
+    }
+  ]
+}
+```
+
+### Crawl Command
+
+```bash
+# Crawl ALL Apple open-source packages (automatic)
+appledocsucker crawl-packages \
+  --apple-official \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+# Automatically fetches all packages from github.com/apple
+# ~18 packages: swift-nio, swift-log, swift-argument-parser, etc.
+
+# Crawl curated community packages (top 50, excluding Apple)
+appledocsucker crawl-packages \
+  --curated \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+# Uses predefined list of high-quality packages
+# Vapor, Alamofire, TCA, etc.
+
+# Crawl specific package
+appledocsucker crawl-package \
+  --owner vapor \
+  --repo vapor \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+
+# Crawl top N packages from SwiftPackageIndex
+appledocsucker crawl-packages \
+  --top 100 \
+  --min-stars 1000 \
+  --exclude-owner apple \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+
+# Crawl everything (Apple + curated + top N)
+appledocsucker crawl-packages \
+  --all \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+```
+
+### Example: Vapor Documentation
+
+**Source:** https://docs.vapor.codes or https://swiftpackageindex.com/vapor/vapor/documentation
+
+**Crawl result:**
+```
+third-party/vapor/vapor/
+├── getting-started.md
+├── routing.md
+├── controllers.md
+├── fluent.md
+├── authentication.md
+└── deployment.md
+```
+
+**Indexed as:**
+- Framework: `vapor`
+- Source: `third-party`
+- Package: `vapor/vapor`
+- Searchable alongside Apple docs
+
+### Benefits
+
+1. **Comprehensive coverage** - Apple APIs + popular third-party packages
+2. **Real-world examples** - Vapor docs show server-side Swift patterns
+3. **Single search** - Query across Apple + third-party in one place
+4. **Learning path** - "How to build web API" → Vapor + Foundation + Swift NIO
+5. **Ecosystem awareness** - AI agents understand full Swift landscape
+
+### Use Cases
+
+**AI Agent Queries:**
+```
+User: "How do I build a REST API in Swift?"
+
+Agent searches:
+- Apple: URLSession, Foundation
+- Third-party: Vapor routing, Hummingbird handlers
+
+Returns: Complete picture of server-side Swift
+```
+
+**MCP Search:**
+```swift
+// Search across all sources (Apple + community packages)
+search_docs(query: "async HTTP client")
+// Returns with clear source labels:
+// - "Apple Official: URLSession"
+// - "Community Package: vapor/vapor - Vapor Client"
+// - "Community Package: apple/swift-nio - NIO examples"
+
+// Filter to third-party only
+search_package_docs(query: "routing", package: "vapor")
+// Returns: Vapor-specific routing documentation
+// All results clearly marked as "Community Package: vapor/vapor"
+```
+
+**Important Implementation Note:**
+
+When implementing the MCP server, ALL results must include a `source` field:
+
+```swift
+struct SearchResult: Codable {
+    let title: String
+    let framework: String
+    let source: Source  // .apple, .swiftEvolution, .community
+    let summary: String
+    let uri: String
+
+    // For community packages only
+    let packageOwner: String?
+    let packageRepo: String?
+    let packageStars: Int?
+
+    // Human-readable source label
+    var sourceLabel: String {
+        switch source {
+        case .apple:
+            return "Apple Official"
+        case .swiftEvolution:
+            return "Swift Evolution Proposal"
+        case .community:
+            return "Community Package: \(packageOwner!)/\(packageRepo!)"
+        }
+    }
+}
+
+enum Source: String, Codable {
+    case apple
+    case swiftEvolution = "swift-evolution"
+    case community
+}
+```
+
+### Implementation Phases
+
+#### Phase 7a: Infrastructure (2-3 hours)
+- [ ] Add `packages` table to database
+- [ ] Add `source_type` and `package_id` columns
+- [ ] Create `PackageInfo` model
+- [ ] Update search queries to include third-party docs
+
+#### Phase 7b: SwiftPackageIndex Integration (2-3 hours)
+- [ ] Fetch top packages from SwiftPackageIndex
+- [ ] Parse documentation URLs
+- [ ] Filter by stars/activity
+
+#### Phase 7c: Documentation Crawling (3-4 hours)
+- [ ] Add `crawl-package` command
+- [ ] Support DocC archives
+- [ ] Support custom doc sites (Vapor, Hummingbird)
+- [ ] Fallback to README parsing
+
+#### Phase 7d: MCP Integration (1-2 hours)
+- [ ] Add `search_package_docs` tool
+- [ ] Update existing tools to include third-party results
+- [ ] Add filtering options
+
+**Total Estimated Effort: 8-12 hours**
+
+### Priority Packages (Phase 1)
+
+#### Tier 1: Apple Open Source Packages (AUTOMATIC - ALL INCLUDED)
+
+All packages under `github.com/apple` should be automatically indexed:
+
+1. **swift-argument-parser** - CLI tool building
+2. **swift-nio** - Async networking foundation
+3. **swift-log** - Logging infrastructure
+4. **swift-metrics** - Metrics/observability
+5. **swift-crypto** - Cryptography
+6. **swift-collections** - Advanced data structures
+7. **swift-algorithms** - Algorithm extensions
+8. **swift-numerics** - Numeric protocols
+9. **swift-system** - System interfaces
+10. **swift-async-algorithms** - AsyncSequence utilities
+11. **swift-distributed-actors** - Distributed computing
+12. **swift-atomics** - Atomic operations
+13. **swift-package-manager** - SPM internals
+14. **swift-syntax** - SwiftSyntax (macros, code generation)
+15. **swift-testing** - New testing framework
+16. **swift-corelibs-foundation** - Foundation implementation
+17. **swift-corelibs-dispatch** - GCD implementation
+18. **swift-corelibs-xctest** - XCTest implementation
+
+**Reasoning:** These are official Apple packages, maintained by Swift core team, same quality/trust as stdlib.
+
+#### Tier 2: Popular Community Packages (CURATED - TOP ~50)
+
+Curated list of high-quality, well-maintained community packages:
+
+**Server-Side:**
+1. **Vapor** (vapor/vapor) - Most popular server framework
+2. **Hummingbird** (hummingbird-project/hummingbird) - Modern lightweight framework
+3. **Fluent** (vapor/fluent) - Database ORM
+
+**Networking:**
+4. **Alamofire** (Alamofire/Alamofire) - iOS HTTP client
+5. **Moya** (Moya/Moya) - Network abstraction layer
+
+**UI/Layout:**
+6. **SnapKit** (SnapKit/SnapKit) - Auto Layout DSL
+7. **Kingfisher** (onevcat/Kingfisher) - Image loading/caching
+
+**Architecture:**
+8. **swift-composable-architecture** (pointfreeco/swift-composable-architecture) - TCA
+9. **RxSwift** (ReactiveX/RxSwift) - Reactive programming
+
+**Testing:**
+10. **Quick/Nimble** (Quick/Quick) - BDD testing
+
+**Total:** ~18 Apple packages (automatic) + ~30-50 curated community packages = ~50-70 total
+
+#### Tier 3: User-Requested (ON-DEMAND)
+
+Users can request specific packages via:
+```bash
+appledocsucker crawl-package --owner <owner> --repo <repo>
+```
+
+### Dependency Resolution
+
+**IMPORTANT:** When indexing a package, also index its **direct dependencies**.
+
+**Example: Vapor Dependencies**
+```
+vapor/vapor
+  ├── apple/swift-nio (Tier 1 - already included)
+  ├── apple/swift-log (Tier 1 - already included)
+  ├── vapor/routing-kit
+  ├── vapor/console-kit
+  └── vapor/multipart-kit
+```
+
+**Implementation:**
+
+1. **Fetch Package.swift** from GitHub
+2. **Parse dependencies** section
+3. **Check if dependency is already indexed**
+4. **Recursively crawl dependencies** (max depth: 2 levels)
+5. **Mark as "Dependency of X"** in metadata
+
+**Command flags:**
+```bash
+# Crawl package WITH dependencies (default)
+appledocsucker crawl-package --owner vapor --repo vapor --with-dependencies
+
+# Crawl package WITHOUT dependencies
+appledocsucker crawl-package --owner vapor --repo vapor --no-dependencies
+
+# Set dependency depth
+appledocsucker crawl-package --owner vapor --repo vapor --dependency-depth 2
+```
+
+**Dependency Metadata:**
+
+```sql
+-- Track package relationships
+CREATE TABLE package_dependencies (
+    package_id INTEGER NOT NULL,
+    dependency_id INTEGER NOT NULL,
+    dependency_type TEXT, -- 'direct', 'transitive'
+    PRIMARY KEY (package_id, dependency_id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (dependency_id) REFERENCES packages(id)
+);
+```
+
+**Search Result Annotation:**
+
+When showing results from a dependency package, indicate the relationship:
+
+```json
+{
+  "title": "EventLoop",
+  "framework": "swift-nio",
+  "source": "apple-official",
+  "source_label": "Apple Official",
+  "used_by": ["vapor/vapor", "hummingbird-project/hummingbird"],
+  "note": "Core dependency of Vapor and Hummingbird"
+}
+```
+
+**Benefits:**
+
+1. **Complete context** - Understand full stack (Vapor → Swift NIO → Foundation)
+2. **No missing docs** - If Vapor uses NIO, NIO docs are available
+3. **Discover related packages** - "What else uses Swift NIO?"
+4. **Avoid duplicates** - Don't re-crawl Apple packages already indexed
+
+**Example Resolution:**
+
+```
+User: crawl vapor/vapor
+
+Step 1: Parse vapor/vapor Package.swift
+Dependencies found:
+  - apple/swift-nio ✅ (Tier 1 - skip, already indexed)
+  - apple/swift-log ✅ (Tier 1 - skip, already indexed)
+  - vapor/routing-kit ⏳ (Not indexed - add to queue)
+  - vapor/console-kit ⏳ (Not indexed - add to queue)
+
+Step 2: Crawl vapor/vapor docs
+
+Step 3: Crawl vapor/routing-kit
+  Dependencies:
+    - apple/swift-nio ✅ (skip)
+
+Step 4: Crawl vapor/console-kit
+  Dependencies:
+    - apple/swift-log ✅ (skip)
+
+Result: 3 packages indexed (vapor, routing-kit, console-kit)
+        + 2 dependencies already available (swift-nio, swift-log)
+```
+
+### Challenges & Solutions
+
+**Challenge 1: Documentation Format Variety**
+- **Solution:** Support multiple formats (DocC, markdown, custom HTML)
+
+**Challenge 2: Outdated Documentation**
+- **Solution:** Track last update, mark stale docs, re-crawl periodically
+
+**Challenge 3: Conflicting Information**
+- **Solution:** Clearly label source (Apple vs third-party), rank Apple docs higher
+
+**Challenge 4: Size Management**
+- **Solution:** Only index top packages, user can request specific packages
+
+### Automation
+
+```bash
+#!/bin/bash
+# /usr/local/bin/appledocsucker-sync-packages
+
+# Weekly sync of top Swift packages
+appledocsucker crawl-packages \
+  --top 50 \
+  --min-stars 1000 \
+  --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
+
+# Rebuild index including third-party
+appledocsucker build-index \
+  --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
+  --third-party-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party \
+  --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
+
+echo "✅ Synced $(ls -1 third-party | wc -l) packages"
+```
+
+---
+
+**This makes AppleDocsucker the single source of truth for ALL Swift documentation - official + ecosystem.**

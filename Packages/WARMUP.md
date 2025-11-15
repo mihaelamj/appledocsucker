@@ -43,23 +43,41 @@ Project Structure:
 │   ├── DocsuckerMCP/       - MCP server for AI agents
 │   └── DocsuckerCLI/       - Main CLI executable
 
-Data Locations (hardcoded):
-- Base: /Volumes/Code/DeveloperExt/appledocsucker
-- Docs: $BASE/docs (markdown)
-- Evolution: $BASE/swift-evolution (429 proposals)
-- Samples: $BASE/sample-code (607 .zip files, ~27GB)
-- Search DB: $BASE/search.db (SQLite)
+**Data Locations (HARDCODED - do not change):**
+
+```
+/Volumes/Code/DeveloperExt/appledocsucker/
+├── docs/              # Apple documentation markdown (~10K+ files, 61 MB)
+├── swift-evolution/   # Swift Evolution proposals (429 files, 8.2 MB)
+├── sample-code/       # Sample code .zip files (607 files, 26 GB)
+└── search.db          # SQLite FTS5 search index (~100 MB)
+```
+
+**Absolute paths used everywhere:**
+- Base: `/Volumes/Code/DeveloperExt/appledocsucker`
+- Docs: `/Volumes/Code/DeveloperExt/appledocsucker/docs`
+- Evolution: `/Volumes/Code/DeveloperExt/appledocsucker/swift-evolution`
+- Samples: `/Volumes/Code/DeveloperExt/appledocsucker/sample-code`
+- Search DB: `/Volumes/Code/DeveloperExt/appledocsucker/search.db`
+
+**Current folder contents:**
+- `docs/`: 10,099+ crawled pages (organized by framework subdirs)
+- `swift-evolution/`: 429 proposal markdown files
+- `sample-code/`: 607 .zip files (all have README.md - verified)
+- `search.db`: SQLite database (to be rebuilt with full index)
 
 Current Status:
-- Documentation crawl: [CHECK PROGRESS]
-- Index: 542 docs (113 Apple + 429 Swift Evolution)
-- MCP server running at /usr/local/bin/appledocsucker-mcp
-- Homebrew formula ready
+- Documentation crawl: ~10,099+ pages (still running)
+- MCP server: /usr/local/bin/appledocsucker-mcp
+- Homebrew formula: /opt/homebrew/Library/Taps/mmj/homebrew-appledocsucker/Formula/appledocsucker.rb
 
 Key Documents:
-1. GUI_PROPOSAL.md - Native macOS SwiftUI GUI plan (6-8 hours realistic)
-2. SAMPLE_CODE_PLAN.md - Sample code integration plan (4 phases)
-3. Package.swift - Swift package configuration
+1. DIRECTORY_STRUCTURE.md - Hardcoded paths reference
+2. TODO.md - Comprehensive task list with all phases
+3. CONSTRAINTS.md - Critical constraints and design decisions
+4. GUI_PROPOSAL.md - Native macOS SwiftUI GUI plan (6-8 hours realistic)
+5. SAMPLE_CODE_PLAN.md - Sample code integration plan (4 phases)
+6. Package.swift - Swift package configuration
 
 Read these files, then ask: What task should we work on?
 ```
@@ -132,10 +150,21 @@ Completed:
 ✅ os.log logging with proper subsystems
 ✅ SwiftLint compliance (fixed all warnings)
 ✅ Sample code download (607 projects, 27GB)
+✅ Sample README verification (100% have README.md files)
+
+Sample Code Details (verified):
+- All 607 samples have README.md files
+- High-quality READMEs with code examples, diagrams, API links
+- Never need to extract .git folders (stay in .zips)
+- Use `unzip -p "{sample}.zip" README.md` for extraction
 
 Planned (Not Started):
 - [ ] Native macOS SwiftUI GUI (GUI_PROPOSAL.md)
-- [ ] Sample code extraction & indexing (SAMPLE_CODE_PLAN.md Phase 1-3)
+- [ ] Sample code README indexing (SAMPLE_CODE_PLAN.md Phase 1-3)
+  - Index README content for FTS5 search
+  - Extract Apple docs URLs and GitHub URLs
+  - Track local availability (all 607 are local)
+  - Find related documentation links
 - [ ] API-level granular indexing (SAMPLE_CODE_PLAN.md Phase 4)
 
 Key Files to Read:
@@ -278,5 +307,171 @@ When adding features:
 
 ---
 
+## Research Scripts
+
+### Analyze Top Swift Packages
+
+Script to identify which top Swift repos are Swift packages and should be indexed:
+
+```bash
+#!/usr/bin/env bash
+# Save as: /Volumes/Code/DeveloperExt/appledocsucker/scripts/analyze-top-swift-packages.sh
+set -euo pipefail
+
+LIMIT=100
+OUTPUT_DIR="/Volumes/Code/DeveloperExt/appledocsucker"
+TIMESTAMP=$(date +%Y-%m-%d)
+
+echo "📊 Fetching top $LIMIT Swift repos..."
+gh search repos \
+  'language:Swift' \
+  --sort stars \
+  --order desc \
+  --limit "$LIMIT" \
+  --json name,fullName,stargazersCount,url,description,updatedAt \
+  > /tmp/top-swift-repos-raw.json
+
+echo "🔍 Checking which ones are Swift packages..."
+
+jq -c '.[]' /tmp/top-swift-repos-raw.json | while read -r repo; do
+  fullName=$(jq -r '.fullName' <<<"$repo")
+  echo "  Checking $fullName..."
+
+  # Does this repo have Package.swift in root?
+  if gh api -H "Accept: application/vnd.github+json" \
+     "/repos/$fullName/contents/Package.swift" >/dev/null 2>&1; then
+    kind="package"
+    hasPackageSwift=true
+
+    # Try to fetch SwiftPackageIndex info if available
+    owner=$(cut -d'/' -f1 <<<"$fullName")
+    repo=$(cut -d'/' -f2 <<<"$fullName")
+
+    # Check if it's on SwiftPackageIndex
+    spiURL="https://swiftpackageindex.com/$owner/$repo"
+    if curl -sf -o /dev/null -I "$spiURL" 2>/dev/null; then
+      onSwiftPackageIndex=true
+      swiftPackageIndexURL="$spiURL"
+    else
+      onSwiftPackageIndex=false
+      swiftPackageIndexURL=null
+    fi
+
+    # Check if it's from Apple
+    if [[ "$owner" == "apple" ]]; then
+      isAppleOfficial=true
+    else
+      isAppleOfficial=false
+    fi
+  else
+    kind="app-or-other"
+    hasPackageSwift=false
+    onSwiftPackageIndex=false
+    swiftPackageIndexURL=null
+    isAppleOfficial=false
+  fi
+
+  jq --arg kind "$kind" \
+     --argjson hasPackageSwift "$hasPackageSwift" \
+     --argjson onSwiftPackageIndex "$onSwiftPackageIndex" \
+     --arg swiftPackageIndexURL "$swiftPackageIndexURL" \
+     --argjson isAppleOfficial "$isAppleOfficial" \
+     '. + {
+       kind: $kind,
+       hasPackageSwift: $hasPackageSwift,
+       onSwiftPackageIndex: $onSwiftPackageIndex,
+       swiftPackageIndexURL: $swiftPackageIndexURL,
+       isAppleOfficial: $isAppleOfficial
+     }' <<<"$repo"
+done | jq -s '.' > "$OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json"
+
+# Generate summary
+echo ""
+echo "📈 Summary:"
+jq -r '
+  group_by(.kind) |
+  map({kind: .[0].kind, count: length}) |
+  .[] |
+  "\(.kind): \(.count)"
+' "$OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json"
+
+echo ""
+echo "🍎 Apple official packages:"
+jq -r '.[] | select(.isAppleOfficial == true) | "  - \(.fullName) (\(.stargazersCount) ⭐)"' \
+  "$OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json"
+
+echo ""
+echo "📦 Top 10 non-Apple packages:"
+jq -r '.[] | select(.hasPackageSwift == true and .isAppleOfficial == false) |
+  "\(.fullName) (\(.stargazersCount) ⭐)"' \
+  "$OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json" | head -10
+
+echo ""
+echo "✅ Wrote: $OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json"
+```
+
+**Usage:**
+```bash
+cd /Volumes/Code/DeveloperExt/appledocsucker
+chmod +x scripts/analyze-top-swift-packages.sh
+./scripts/analyze-top-swift-packages.sh
+```
+
+**Output:**
+- `top-swift-repos-YYYY-MM-DD.json` - Full data with metadata
+- Summary showing package vs app breakdown
+- List of Apple official packages
+- Top 10 community packages
+
+**Use this data to:**
+1. Verify all Apple packages are in Tier 1 list
+2. **MANUAL CURATION:** Update Tier 2 community packages with modern relevance
+3. Identify packages on SwiftPackageIndex (easier to crawl)
+
+**IMPORTANT: You are the curator!** High stars ≠ modern relevance.
+
+**Exclude outdated packages (even with high stars):**
+- ❌ **Alamofire** - URLSession + async/await is sufficient now
+- ❌ **RxSwift** - Replaced by Swift's native async/await
+- ❌ **PromiseKit** - Replaced by async/await
+- ❌ **SwiftyJSON** - Codable is built-in to Swift
+
+**Include packages that fill real gaps in 2024/2025:**
+- ✅ **Vapor/Hummingbird** - Server-side Swift (unique use case)
+- ✅ **TCA** (Composable Architecture) - Modern architecture pattern
+- ✅ **Swift NIO** - Foundation for async networking (Apple official)
+- ✅ Packages actively maintained with Swift 5.5+ features
+
+**Curation Criteria:**
+1. Active maintenance (commits in last 6 months)
+2. Modern Swift (uses Swift 5.5+ concurrency, Sendable, etc.)
+3. Fills a gap not covered by stdlib/Foundation
+4. Actually used in production (check GitHub dependents)
+5. Has good documentation worth indexing
+
+**Create `tier2-packages.json` with:**
+```json
+{
+  "packages": [
+    {
+      "owner": "vapor",
+      "repo": "vapor",
+      "stars": 24000,
+      "rationale": "Leading server-side Swift framework, active development",
+      "include": true
+    },
+    {
+      "owner": "Alamofire",
+      "repo": "Alamofire",
+      "stars": 40589,
+      "rationale": "URLSession + async/await replaced this for most use cases",
+      "include": false
+    }
+  ]
+}
+```
+
+---
+
 *Last updated: 2024-11-15*
-*Crawl status: In progress (~950 pages as of 1:33 AM)*
+*Crawl status: In progress (~8,421 pages as of 3:30 AM)*
