@@ -31,7 +31,7 @@
 - **Per-directory metadata**: Each output directory gets its own metadata.json for independent crawl sessions
 - **Auto-directory selection**: Automatically chooses `swift-org/` for Swift.org URLs, `docs/` for Apple docs
 - **Flexible URL prefix configuration**: Support for multiple documentation sources beyond developer.apple.com
-- **Resume command**: New `appledocsucker resume` command to continue crawls without typing start URLs
+- **Resume command**: New `cupertino resume` command to continue crawls without typing start URLs
 
 ### Changed
 - Enhanced URL normalization to support docs.swift.org domain

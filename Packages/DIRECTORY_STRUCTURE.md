@@ -1,4 +1,4 @@
-# AppleDocsucker - Directory Structure Reference
+# AppleCupertino - Directory Structure Reference
 
 ## Hardcoded Paths
 
@@ -114,7 +114,7 @@ Use these hardcoded paths in Swift code:
 
 ```swift
 // Base directory
-let baseDir = "/Volumes/Code/DeveloperExt/appledocsucker"
+let baseDir = "/Volumes/Code/DeveloperExt/cupertino"
 
 // Data directories
 let docsDir = "/Volumes/Code/DeveloperExt/appledocsucker/docs"
@@ -126,7 +126,7 @@ let searchDB = "/Volumes/Code/DeveloperExt/appledocsucker/search.db"
 ### Shell Scripts
 ```bash
 # Base directory
-BASE_DIR="/Volumes/Code/DeveloperExt/appledocsucker"
+BASE_DIR="/Volumes/Code/DeveloperExt/cupertino"
 
 # Data directories
 DOCS_DIR="$BASE_DIR/docs"
@@ -138,7 +138,7 @@ SEARCH_DB="$BASE_DIR/search.db"
 ## External SSD Info
 
 - **Volume:** `/Volumes/Code`
-- **Project Root:** `/Volumes/Code/DeveloperExt/appledocsucker`
+- **Project Root:** `/Volumes/Code/DeveloperExt/cupertino`
 - **Available Space:** ~1.6 TB free
 - **File System:** APFS (case-sensitive)
 
@@ -163,7 +163,7 @@ find /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution -name "*.md" | wc
 find /Volumes/Code/DeveloperExt/appledocsucker/sample-code -name "*.zip" | wc -l
 
 # Check total size
-du -sh /Volumes/Code/DeveloperExt/appledocsucker
+du -sh /Volumes/Code/DeveloperExt/cupertino
 
 # Verify README in sample
 unzip -l /Volumes/Code/DeveloperExt/appledocsucker/sample-code/accelerate-blurring-an-image.zip | grep README

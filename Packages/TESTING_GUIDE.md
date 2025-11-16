@@ -1,4 +1,4 @@
-# Testing Guide for Docsucker
+# Testing Guide for Cupertino
 
 Complete guide for testing both the CLI crawler and MCP server.
 
@@ -21,7 +21,7 @@ cd Packages
 swift build --product docsucker
 
 # Verify binary exists
-ls -lh .build/debug/appledocsucker
+ls -lh .build/debug/cupertino
 ```
 
 **Expected**: Binary should be ~4.3MB
@@ -29,7 +29,7 @@ ls -lh .build/debug/appledocsucker
 ### 2. Help Command Test
 
 ```bash
-.build/debug/appledocsucker --help
+.build/debug/cupertino --help
 ```
 
 **Expected Output:**
@@ -46,13 +46,13 @@ SUBCOMMANDS:
   crawl (default)         Crawl Apple documentation and save as Markdown
   crawl-evolution         Download Swift Evolution proposals from GitHub
   update                  Update existing documentation (incremental crawl)
-  config                  Manage Docsucker configuration
+  config                  Manage Cupertino configuration
 ```
 
 ### 3. Version Test
 
 ```bash
-.build/debug/appledocsucker --version
+.build/debug/cupertino --version
 ```
 
 **Expected**: `1.0.0`
@@ -61,7 +61,7 @@ SUBCOMMANDS:
 
 ```bash
 mkdir -p ~/docsucker-test
-.build/debug/appledocsucker crawl \
+.build/debug/cupertino crawl \
   --start-url "https://developer.apple.com/documentation/swift/array" \
   --max-pages 3 \
   --max-depth 1 \
@@ -71,7 +71,7 @@ mkdir -p ~/docsucker-test
 
 **Expected Output:**
 ```
-🚀 Docsucker - Apple Documentation Crawler
+🚀 Cupertino - Apple Documentation Crawler
 
 🚀 Starting crawl
    Start URL: https://developer.apple.com/documentation/swift/array
@@ -118,7 +118,7 @@ du -sh ~/docsucker-test
 ### 5. Swift Evolution Test
 
 ```bash
-.build/debug/appledocsucker crawl-evolution \
+.build/debug/cupertino crawl-evolution \
   --output-dir ~/swift-evolution-test
 ```
 
@@ -156,7 +156,7 @@ head -20 ~/swift-evolution-test/SE-0001-keywords-as-argument-labels.md
 
 ```bash
 # Re-run crawl (should skip unchanged pages)
-.build/debug/appledocsucker crawl \
+.build/debug/cupertino crawl \
   --start-url "https://developer.apple.com/documentation/swift/array" \
   --max-pages 3 \
   --max-depth 1 \
@@ -178,10 +178,10 @@ head -20 ~/swift-evolution-test/SE-0001-keywords-as-argument-labels.md
 
 ```bash
 # Initialize config
-.build/debug/appledocsucker config init
+.build/debug/cupertino config init
 
 # Show config
-.build/debug/appledocsucker config show
+.build/debug/cupertino config show
 ```
 
 **Expected**: JSON configuration displayed
@@ -194,10 +194,10 @@ head -20 ~/swift-evolution-test/SE-0001-keywords-as-argument-labels.md
 
 ```bash
 # Build the MCP server
-swift build --product appledocsucker-mcp
+swift build --product cupertino-mcp
 
 # Verify binary exists
-ls -lh .build/debug/appledocsucker-mcp
+ls -lh .build/debug/cupertino-mcp
 ```
 
 **Expected**: Binary should be ~4.4MB
@@ -205,14 +205,14 @@ ls -lh .build/debug/appledocsucker-mcp
 ### 2. Help Command Test
 
 ```bash
-.build/debug/appledocsucker-mcp --help
+.build/debug/cupertino-mcp --help
 ```
 
 **Expected Output:**
 ```
 OVERVIEW: MCP Server for Apple Documentation and Swift Evolution
 
-USAGE: appledocsucker-mcp <subcommand>
+USAGE: cupertino-mcp <subcommand>
 
 OPTIONS:
   --version               Show the version.
@@ -225,12 +225,12 @@ SUBCOMMANDS:
 ### 3. Startup Test
 
 ```bash
-.build/debug/appledocsucker-mcp serve
+.build/debug/cupertino-mcp serve
 ```
 
 **Expected Output:**
 ```
-🚀 Docsucker MCP Server starting...
+🚀 Cupertino MCP Server starting...
    Apple docs: /Users/username/.docsucker/docs
    Evolution: /Users/username/.docsucker/swift-evolution
    Waiting for client connection...
@@ -247,8 +247,8 @@ SUBCOMMANDS:
 If you see errors about directories not found:
 ```bash
 # Download documentation first
-appledocsucker crawl --max-pages 10 --output-dir ~/.docsucker/docs
-appledocsucker crawl-evolution --output-dir ~/.docsucker/swift-evolution
+cupertino crawl --max-pages 10 --output-dir ~/.docsucker/docs
+cupertino crawl-evolution --output-dir ~/.docsucker/swift-evolution
 ```
 
 ### 4. Verify Documentation Exists
@@ -327,13 +327,13 @@ swift test
 ```
 ✅ 28/28 tests passed (0 failures)
 - 21 SharedModels tests (IBAN validation)
-- 7 MCP/Docsucker framework tests:
+- 7 MCP/Cupertino framework tests:
   ✅ testConfiguration
   ✅ testHTMLToMarkdown
   ✅ testRequestIDCoding
   ✅ testServerInitialization
   ✅ testTransportProtocol
-  ✅ testDocsuckerMCPSupport
+  ✅ testCupertinoMCPSupport
   ✅ testDownloadRealAppleDocPage (integration)
 ```
 
@@ -347,7 +347,7 @@ swift test
 
 ```bash
 # Download small sample (10 pages)
-.build/debug/appledocsucker crawl \
+.build/debug/cupertino crawl \
   --start-url "https://developer.apple.com/documentation/swift" \
   --max-pages 10 \
   --output-dir ~/.docsucker/docs
@@ -358,7 +358,7 @@ swift test
 #### Step 2: Download Swift Evolution
 
 ```bash
-.build/debug/appledocsucker crawl-evolution \
+.build/debug/cupertino crawl-evolution \
   --output-dir ~/.docsucker/swift-evolution
 ```
 
@@ -367,7 +367,7 @@ swift test
 #### Step 3: Start MCP Server
 
 ```bash
-.build/debug/appledocsucker-mcp serve
+.build/debug/cupertino-mcp serve
 ```
 
 **✅ Success**: Server starts and shows "Waiting for client connection..."
@@ -386,8 +386,8 @@ swift test
    ```json
    {
      "mcpServers": {
-       "appledocsucker": {
-         "command": "/Users/YOUR_USERNAME/.build/debug/appledocsucker-mcp",
+       "cupertino": {
+         "command": "/Users/YOUR_USERNAME/.build/debug/cupertino-mcp",
          "args": ["serve"]
        }
      }
@@ -436,7 +436,7 @@ ls ~/.docsucker/docs
 ls ~/.docsucker/swift-evolution
 
 # Use custom paths
-.build/debug/appledocsucker-mcp serve \
+.build/debug/cupertino-mcp serve \
   --docs-dir ~/my-docs \
   --evolution-dir ~/my-evolution
 ```
@@ -447,17 +447,17 @@ ls ~/.docsucker/swift-evolution
 
 1. Check binary path:
    ```bash
-   which appledocsucker-mcp
+   which cupertino-mcp
    # or
-   realpath .build/debug/appledocsucker-mcp
+   realpath .build/debug/cupertino-mcp
    ```
 
 2. Use full path in Claude config:
    ```json
    {
      "mcpServers": {
-       "appledocsucker": {
-         "command": "/Users/username/path/to/.build/debug/appledocsucker-mcp",
+       "cupertino": {
+         "command": "/Users/username/path/to/.build/debug/cupertino-mcp",
          "args": ["serve"]
        }
      }
@@ -467,7 +467,7 @@ ls ~/.docsucker/swift-evolution
 3. Check Claude logs:
    - Open Claude Desktop
    - Settings → Developer → View Logs
-   - Look for "appledocsucker" errors
+   - Look for "cupertino" errors
 
 ### Issue: Tests failing
 

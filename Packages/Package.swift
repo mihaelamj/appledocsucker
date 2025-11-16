@@ -15,17 +15,17 @@ let baseProducts: [Product] = [
     .singleTargetLibrary("MCPServer"),
 ]
 
-// Docsucker products (macOS only - uses FileManager.homeDirectoryForCurrentUser)
+// Cupertino products (macOS only - uses FileManager.homeDirectoryForCurrentUser)
 #if os(macOS)
 let macOSOnlyProducts: [Product] = [
-    .singleTargetLibrary("DocsuckerLogging"),
-    .singleTargetLibrary("DocsuckerShared"),
-    .singleTargetLibrary("DocsuckerCore"),
-    .singleTargetLibrary("DocsuckerSearch"),
-    .singleTargetLibrary("DocsuckerMCPSupport"),
-    .singleTargetLibrary("DocsSearchToolProvider"),
-    .executable(name: "appledocsucker", targets: ["DocsuckerCLI"]),
-    .executable(name: "appledocsucker-mcp", targets: ["DocsuckerMCP"]),
+    .singleTargetLibrary("CupertinoLogging"),
+    .singleTargetLibrary("CupertinoShared"),
+    .singleTargetLibrary("CupertinoCore"),
+    .singleTargetLibrary("CupertinoSearch"),
+    .singleTargetLibrary("CupertinoMCPSupport"),
+    .singleTargetLibrary("CupertinoSearchToolProvider"),
+    .executable(name: "cupertino", targets: ["CupertinoCLI"]),
+    .executable(name: "cupertino-mcp", targets: ["CupertinoMCP"]),
 ]
 #else
 let macOSOnlyProducts: [Product] = []
@@ -72,7 +72,7 @@ let targets: [Target] = {
 
     let mcpServerTarget = Target.target(
         name: "MCPServer",
-        dependencies: ["MCPShared", "MCPTransport"]
+        dependencies: ["MCPShared", "MCPTransport", "CupertinoShared"]
     )
     let mcpServerTestsTarget = Target.testTarget(
         name: "MCPServerTests",
@@ -88,109 +88,109 @@ let targets: [Target] = {
         mcpServerTestsTarget,
     ]
 
-    // ---------- Docsucker (Apple Docs Crawler → MCP Server - macOS only) ----------
+    // ---------- Cupertino (Apple Docs Crawler → MCP Server - macOS only) ----------
     #if os(macOS)
-    let docsuckerLoggingTarget = Target.target(
-        name: "DocsuckerLogging",
-        dependencies: []
+    let cupertinoLoggingTarget = Target.target(
+        name: "CupertinoLogging",
+        dependencies: ["CupertinoShared"]
     )
-    let docsuckerLoggingTestsTarget = Target.testTarget(
-        name: "DocsuckerLoggingTests",
-        dependencies: ["DocsuckerLogging"]
+    let cupertinoLoggingTestsTarget = Target.testTarget(
+        name: "CupertinoLoggingTests",
+        dependencies: ["CupertinoLogging"]
     )
 
-    let docsuckerSharedTarget = Target.target(
-        name: "DocsuckerShared",
+    let cupertinoSharedTarget = Target.target(
+        name: "CupertinoShared",
         dependencies: ["MCPShared"]
     )
-    let docsuckerSharedTestsTarget = Target.testTarget(
-        name: "DocsuckerSharedTests",
-        dependencies: ["DocsuckerShared"]
+    let cupertinoSharedTestsTarget = Target.testTarget(
+        name: "CupertinoSharedTests",
+        dependencies: ["CupertinoShared"]
     )
 
-    let docsuckerCoreTarget = Target.target(
-        name: "DocsuckerCore",
-        dependencies: ["DocsuckerShared", "DocsuckerLogging"]
+    let cupertinoCoreTarget = Target.target(
+        name: "CupertinoCore",
+        dependencies: ["CupertinoShared", "CupertinoLogging"]
     )
-    let docsuckerCoreTestsTarget = Target.testTarget(
-        name: "DocsuckerCoreTests",
-        dependencies: ["DocsuckerCore"]
-    )
-
-    let docsuckerSearchTarget = Target.target(
-        name: "DocsuckerSearch",
-        dependencies: ["DocsuckerShared", "DocsuckerLogging"]
-    )
-    let docsuckerSearchTestsTarget = Target.testTarget(
-        name: "DocsuckerSearchTests",
-        dependencies: ["DocsuckerSearch"]
+    let cupertinoCoreTestsTarget = Target.testTarget(
+        name: "CupertinoCoreTests",
+        dependencies: ["CupertinoCore"]
     )
 
-    let docsuckerMCPSupportTarget = Target.target(
-        name: "DocsuckerMCPSupport",
-        dependencies: ["MCPServer", "MCPShared", "DocsuckerShared", "DocsuckerLogging"]
+    let cupertinoSearchTarget = Target.target(
+        name: "CupertinoSearch",
+        dependencies: ["CupertinoShared", "CupertinoLogging"]
     )
-    let docsuckerMCPSupportTestsTarget = Target.testTarget(
-        name: "DocsuckerMCPSupportTests",
-        dependencies: ["DocsuckerMCPSupport"]
-    )
-
-    let docsSearchToolProviderTarget = Target.target(
-        name: "DocsSearchToolProvider",
-        dependencies: ["MCPServer", "MCPShared", "DocsuckerSearch"]
-    )
-    let docsSearchToolProviderTestsTarget = Target.testTarget(
-        name: "DocsSearchToolProviderTests",
-        dependencies: ["DocsSearchToolProvider"]
+    let cupertinoSearchTestsTarget = Target.testTarget(
+        name: "CupertinoSearchTests",
+        dependencies: ["CupertinoSearch"]
     )
 
-    let docsuckerCLITarget = Target.executableTarget(
-        name: "DocsuckerCLI",
+    let cupertinoMCPSupportTarget = Target.target(
+        name: "CupertinoMCPSupport",
+        dependencies: ["MCPServer", "MCPShared", "CupertinoShared", "CupertinoLogging"]
+    )
+    let cupertinoMCPSupportTestsTarget = Target.testTarget(
+        name: "CupertinoMCPSupportTests",
+        dependencies: ["CupertinoMCPSupport"]
+    )
+
+    let cupertinoSearchToolProviderTarget = Target.target(
+        name: "CupertinoSearchToolProvider",
+        dependencies: ["MCPServer", "MCPShared", "CupertinoSearch"]
+    )
+    let cupertinoSearchToolProviderTestsTarget = Target.testTarget(
+        name: "CupertinoSearchToolProviderTests",
+        dependencies: ["CupertinoSearchToolProvider"]
+    )
+
+    let cupertinoCLITarget = Target.executableTarget(
+        name: "CupertinoCLI",
         dependencies: [
-            "DocsuckerShared",
-            "DocsuckerCore",
-            "DocsuckerSearch",
-            "DocsuckerLogging",
+            "CupertinoShared",
+            "CupertinoCore",
+            "CupertinoSearch",
+            "CupertinoLogging",
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
         ]
     )
 
-    let docsuckerMCPTarget = Target.executableTarget(
-        name: "DocsuckerMCP",
+    let cupertinoMCPTarget = Target.executableTarget(
+        name: "CupertinoMCP",
         dependencies: [
             "MCPServer",
             "MCPTransport",
-            "DocsuckerShared",
-            "DocsuckerCore",
-            "DocsuckerSearch",
-            "DocsuckerMCPSupport",
-            "DocsSearchToolProvider",
-            "DocsuckerLogging",
+            "CupertinoShared",
+            "CupertinoCore",
+            "CupertinoSearch",
+            "CupertinoMCPSupport",
+            "CupertinoSearchToolProvider",
+            "CupertinoLogging",
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
         ]
     )
 
-    let docsuckerTargets: [Target] = [
-        docsuckerLoggingTarget,
-        docsuckerLoggingTestsTarget,
-        docsuckerSharedTarget,
-        docsuckerSharedTestsTarget,
-        docsuckerCoreTarget,
-        docsuckerCoreTestsTarget,
-        docsuckerSearchTarget,
-        docsuckerSearchTestsTarget,
-        docsuckerMCPSupportTarget,
-        docsuckerMCPSupportTestsTarget,
-        docsSearchToolProviderTarget,
-        docsSearchToolProviderTestsTarget,
-        docsuckerCLITarget,
-        docsuckerMCPTarget,
+    let cupertinoTargets: [Target] = [
+        cupertinoLoggingTarget,
+        cupertinoLoggingTestsTarget,
+        cupertinoSharedTarget,
+        cupertinoSharedTestsTarget,
+        cupertinoCoreTarget,
+        cupertinoCoreTestsTarget,
+        cupertinoSearchTarget,
+        cupertinoSearchTestsTarget,
+        cupertinoMCPSupportTarget,
+        cupertinoMCPSupportTestsTarget,
+        cupertinoSearchToolProviderTarget,
+        cupertinoSearchToolProviderTestsTarget,
+        cupertinoCLITarget,
+        cupertinoMCPTarget,
     ]
     #else
-    let docsuckerTargets: [Target] = []
+    let cupertinoTargets: [Target] = []
     #endif
 
-    return mcpTargets + docsuckerTargets
+    return mcpTargets + cupertinoTargets
 }()
 
 // -------------------------------------------------------------
@@ -200,7 +200,7 @@ let targets: [Target] = {
 // -------------------------------------------------------------
 
 let package = Package(
-    name: "Docsucker",
+    name: "Cupertino",
     platforms: [
         .macOS(.v15),
     ],

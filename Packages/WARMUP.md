@@ -1,4 +1,4 @@
-# AppleDocsucker - AI Assistant Warmup Guide
+# AppleCupertino - AI Assistant Warmup Guide
 
 ## Quick Context Prompts
 
@@ -7,11 +7,11 @@ Use these prompts to quickly get an AI assistant up to speed on this project.
 ### Minimal Warmup (10 seconds)
 
 ```
-We're building AppleDocsucker - a tool that crawls Apple documentation and makes it searchable for AI agents.
+We're building AppleCupertino - a tool that crawls Apple documentation and makes it searchable for AI agents.
 
 Current state:
-- CLI tool: appledocsucker (crawling)
-- MCP server: appledocsucker-mcp (for Claude/AI agents)
+- CLI tool: cupertino (crawling)
+- MCP server: cupertino-mcp (for Claude/AI agents)
 - Search indexing with SQLite FTS5
 - Currently crawling ~13,000 pages
 
@@ -26,7 +26,7 @@ What do you want help with?
 ### Detailed Warmup (30 seconds)
 
 ```
-AppleDocsucker Project Overview:
+AppleCupertino Project Overview:
 
 Tech Stack:
 - Swift 6.2
@@ -36,13 +36,13 @@ Tech Stack:
 - SwiftUI for planned GUI
 
 Project Structure:
-/Volumes/Code/DeveloperExt/work/appledocsucker/Packages/
+/Volumes/Code/DeveloperExt/work/cupertino/Packages/
 ├── Sources/
-│   ├── DocsuckerCore/      - Crawling logic
-│   ├── DocsuckerSearch/    - SQLite FTS5 indexing
-│   ├── DocsuckerLogging/   - os.log based logging
-│   ├── DocsuckerMCP/       - MCP server for AI agents
-│   └── DocsuckerCLI/       - Main CLI executable
+│   ├── CupertinoCore/      - Crawling logic
+│   ├── CupertinoSearch/    - SQLite FTS5 indexing
+│   ├── CupertinoLogging/   - os.log based logging
+│   ├── CupertinoMCP/       - MCP server for AI agents
+│   └── CupertinoCLI/       - Main CLI executable
 
 **Data Locations (HARDCODED - do not change):**
 
@@ -55,7 +55,7 @@ Project Structure:
 ```
 
 **Absolute paths used everywhere:**
-- Base: `/Volumes/Code/DeveloperExt/appledocsucker`
+- Base: `/Volumes/Code/DeveloperExt/cupertino`
 - Docs: `/Volumes/Code/DeveloperExt/appledocsucker/docs`
 - Evolution: `/Volumes/Code/DeveloperExt/appledocsucker/swift-evolution`
 - Samples: `/Volumes/Code/DeveloperExt/appledocsucker/sample-code`
@@ -69,8 +69,10 @@ Project Structure:
 
 Current Status:
 - Documentation crawl: ~10,099+ pages (still running)
-- MCP server: /usr/local/bin/appledocsucker-mcp
-- Homebrew formula: /opt/homebrew/Library/Taps/mmj/homebrew-appledocsucker/Formula/appledocsucker.rb
+- Swift.org crawl: Completed (88 pages, auto-generates priority-packages.json)
+- Package fetching: Integrated (fetch-packages command)
+- MCP server: /usr/local/bin/cupertino-mcp
+- Homebrew formula: /opt/homebrew/Library/Taps/mmj/homebrew-cupertino/Formula/cupertino.rb
 
 Key Documents:
 1. DIRECTORY_STRUCTURE.md - Hardcoded paths reference
@@ -87,7 +89,7 @@ Read these files, then ask: What task should we work on?
 ### Full Context Warmup (1 minute)
 
 ```
-AppleDocsucker - Comprehensive Context
+AppleCupertino - Comprehensive Context
 
 Project: Tool to crawl and index Apple developer documentation for AI agent consumption
 
@@ -98,35 +100,35 @@ History:
 - Conversation split due to context limit
 
 Architecture:
-1. DocsuckerCore
+1. CupertinoCore
    - WebCrawler: Breadth-first crawling with WKWebView
    - HTMLToMarkdown: Multi-stage conversion with code block protection
    - Crawl metadata tracking and resume capability
 
-2. DocsuckerSearch
+2. CupertinoSearch
    - SearchIndex (Actor): SQLite3 with FTS5
    - SearchIndexBuilder: Indexes docs + Swift Evolution proposals
    - BM25 ranking with Porter stemming
 
-3. DocsuckerLogging
-   - Subsystem: com.docsucker.appledocsucker
+3. CupertinoLogging
+   - Subsystem: com.docsucker.cupertino
    - Categories: crawler, mcp, search, markdown
-   - View logs: subsystem:com.docsucker.appledocsucker in Console.app
+   - View logs: subsystem:com.docsucker.cupertino in Console.app
 
-4. DocsuckerMCP
+4. CupertinoMCP
    - MCP server for Claude Code / AI agents
    - Tools: search_docs, get_doc_content
-   - Running via: /usr/local/bin/appledocsucker-mcp serve
+   - Running via: /usr/local/bin/cupertino-mcp serve
 
-5. DocsuckerCLI
-   - Main executable: /usr/local/bin/appledocsucker
+5. CupertinoCLI
+   - Main executable: /usr/local/bin/cupertino
    - Commands: crawl, build-index
    - Flags: --start-url, --output-dir, --max-pages, --force
 
 Installation:
-- Homebrew tap: mmj/appledocsucker
-- Formula: /opt/homebrew/Library/Taps/mmj/homebrew-appledocsucker/Formula/appledocsucker.rb
-- Installed: /usr/local/bin/{appledocsucker, appledocsucker-mcp}
+- Homebrew tap: mmj/cupertino
+- Formula: /opt/homebrew/Library/Taps/mmj/homebrew-cupertino/Formula/cupertino.rb
+- Installed: /usr/local/bin/{cupertino, cupertino-mcp}
 
 Data Pipeline:
 1. Crawl: Apple docs → WKWebView → HTML → Markdown
@@ -139,7 +141,7 @@ Current Crawl Status:
 - Killed: Nov 15, 2024 ~7:45 PM (at page 12,661, depth=4 in Accelerate)
 - Resumed: Nov 15, 2024 ~7:47 PM from Accelerate framework
 - Current pages: 11,331 (73MB)
-- Current command: appledocsucker crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force
+- Current command: cupertino crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force
 - Status: Running in background (bash_id: 40ae3f)
 - Note: Using `--force` to rediscover pages, SHA256 change detection skips unchanged ones
 
@@ -179,7 +181,7 @@ Key Files to Read:
 6. Package.swift - Swift package configuration
 
 Important Notes:
-- Hardcoded base path: /Volumes/Code/DeveloperExt/appledocsucker
+- Hardcoded base path: /Volumes/Code/DeveloperExt/cupertino
 - External SSD with 1.6TB free space
 - User prefers native macOS apps, hates web GUIs
 - Realistic estimates: GUI = 6-8 hours, not weeks
@@ -201,16 +203,16 @@ Now: What task should we work on?
 bash /tmp/check-crawl-progress.sh
 
 # Check current process
-ps aux | grep appledocsucker | grep -v grep
+ps aux | grep cupertino | grep -v grep
 
 # View logs
-log stream --predicate 'subsystem == "com.docsucker.appledocsucker"' --level debug
+log stream --predicate 'subsystem == "com.docsucker.cupertino"' --level debug
 
 # Database stats
 sqlite3 /Volumes/Code/DeveloperExt/appledocsucker/search.db "SELECT COUNT(*) FROM docs_metadata"
 
 # Build and install
-cd /Volumes/Code/DeveloperExt/work/appledocsucker/Packages
+cd /Volumes/Code/DeveloperExt/work/cupertino/Packages
 make build
 sudo make install
 ```
@@ -246,7 +248,7 @@ Prefer splitting functions over disabling rules.
 ### Task: Test MCP Server
 ```
 Test the MCP server with search_docs tool.
-Server runs at: /usr/local/bin/appledocsucker-mcp serve
+Server runs at: /usr/local/bin/cupertino-mcp serve
 Test script: ./test-mcp-server.sh
 ```
 
@@ -323,7 +325,7 @@ Script to identify which top Swift repos are Swift packages and should be indexe
 set -euo pipefail
 
 LIMIT=100
-OUTPUT_DIR="/Volumes/Code/DeveloperExt/appledocsucker"
+OUTPUT_DIR="/Volumes/Code/DeveloperExt/cupertino"
 TIMESTAMP=$(date +%Y-%m-%d)
 
 echo "📊 Fetching top $LIMIT Swift repos..."
@@ -416,7 +418,7 @@ echo "✅ Wrote: $OUTPUT_DIR/top-swift-repos-${TIMESTAMP}.json"
 
 **Usage:**
 ```bash
-cd /Volumes/Code/DeveloperExt/appledocsucker
+cd /Volumes/Code/DeveloperExt/cupertino
 chmod +x scripts/analyze-top-swift-packages.sh
 ./scripts/analyze-top-swift-packages.sh
 ```

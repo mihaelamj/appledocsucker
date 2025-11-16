@@ -1,8 +1,8 @@
 import Foundation
 import MCPShared
 import MCPTransport
-#if canImport(DocsuckerLogging)
-import DocsuckerLogging
+#if canImport(CupertinoLogging)
+import CupertinoLogging
 #endif
 
 // MARK: - MCP Server
@@ -29,27 +29,27 @@ public actor MCPServer {
     private var requestID: Int = 0
 
     public init(name: String, version: String) {
-        self.serverInfo = Implementation(name: name, version: version)
-        self.capabilities = ServerCapabilities()
+        serverInfo = Implementation(name: name, version: version)
+        capabilities = ServerCapabilities()
     }
 
     // MARK: - Provider Registration
 
     /// Register a resource provider
     public func registerResourceProvider(_ provider: some ResourceProvider) {
-        self.resourceProvider = provider
+        resourceProvider = provider
         updateCapabilities()
     }
 
     /// Register a tool provider
     public func registerToolProvider(_ provider: some ToolProvider) {
-        self.toolProvider = provider
+        toolProvider = provider
         updateCapabilities()
     }
 
     /// Register a prompt provider
     public func registerPromptProvider(_ provider: some PromptProvider) {
-        self.promptProvider = provider
+        promptProvider = provider
         updateCapabilities()
     }
 
@@ -59,7 +59,7 @@ public actor MCPServer {
             toolProvider: toolProvider,
             promptProvider: promptProvider
         )
-        self.capabilities = providerCaps.toServerCapabilities()
+        capabilities = providerCaps.toServerCapabilities()
     }
 
     // MARK: - Server Lifecycle
@@ -167,9 +167,11 @@ public actor MCPServer {
         case "resources/list":
             try ensureInitialized()
             return try await handleListResources(request)
+
         case "resources/read":
             try ensureInitialized()
             return try await handleReadResource(request)
+
         case "resources/templates/list":
             try ensureInitialized()
             return try await handleListResourceTemplates(request)
@@ -178,6 +180,7 @@ public actor MCPServer {
         case "tools/list":
             try ensureInitialized()
             return try await handleListTools(request)
+
         case "tools/call":
             try ensureInitialized()
             return try await handleCallTool(request)
@@ -186,6 +189,7 @@ public actor MCPServer {
         case "prompts/list":
             try ensureInitialized()
             return try await handleListPrompts(request)
+
         case "prompts/get":
             try ensureInitialized()
             return try await handleGetPrompt(request)
@@ -306,7 +310,7 @@ public actor MCPServer {
         }
     }
 
-    private func encodeResult<T: Encodable>(_ value: T) throws -> [String: AnyCodable] {
+    private func encodeResult(_ value: some Encodable) throws -> [String: AnyCodable] {
         let encoder = JSONEncoder()
         let data = try encoder.encode(value)
         let decoder = JSONDecoder()
@@ -316,22 +320,22 @@ public actor MCPServer {
     // MARK: - Logging
 
     private func logInfo(_ message: String) {
-        #if canImport(DocsuckerLogging)
-        DocsuckerLogger.mcp.info(message)
+        #if canImport(CupertinoLogging)
+        CupertinoLogger.mcp.info(message)
         #endif
         fputs("ℹ️  \(message)\n", stderr)
     }
 
     private func logWarning(_ message: String) {
-        #if canImport(DocsuckerLogging)
-        DocsuckerLogger.mcp.warning(message)
+        #if canImport(CupertinoLogging)
+        CupertinoLogger.mcp.warning(message)
         #endif
         fputs("⚠️  \(message)\n", stderr)
     }
 
     private func logError(_ message: String) {
-        #if canImport(DocsuckerLogging)
-        DocsuckerLogger.mcp.error(message)
+        #if canImport(CupertinoLogging)
+        CupertinoLogger.mcp.error(message)
         #endif
         fputs("❌ \(message)\n", stderr)
     }

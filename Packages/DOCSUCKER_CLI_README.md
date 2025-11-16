@@ -1,4 +1,4 @@
-# Docsucker CLI - Apple Documentation Crawler
+# Cupertino CLI - Apple Documentation Crawler
 
 A Swift command-line tool for downloading and converting Apple documentation to Markdown format.
 
@@ -23,7 +23,7 @@ cd Packages
 swift build --product docsucker
 ```
 
-The executable will be at: `.build/debug/appledocsucker`
+The executable will be at: `.build/debug/cupertino`
 
 ### Install to /usr/local/bin (optional):
 
@@ -39,7 +39,7 @@ cp .build/release/docsucker /usr/local/bin/
 To download the complete Apple documentation library:
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/" \
   --max-pages 15000 \
   --max-depth 15 \
@@ -61,7 +61,7 @@ appledocsucker crawl \
 Download just SwiftUI documentation:
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/swiftui" \
   --max-pages 500 \
   --output-dir ~/docs/swiftui
@@ -70,7 +70,7 @@ appledocsucker crawl \
 Download just Foundation framework:
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/foundation" \
   --max-pages 1000 \
   --output-dir ~/docs/foundation
@@ -81,7 +81,7 @@ appledocsucker crawl \
 Download all accepted Swift Evolution proposals from GitHub:
 
 ```bash
-appledocsucker crawl-evolution \
+cupertino crawl-evolution \
   --output-dir ~/.docsucker/swift-evolution
 ```
 
@@ -101,7 +101,7 @@ Download Apple sample code projects as zip/tar files:
 **First time - Authenticate with Apple:**
 
 ```bash
-appledocsucker download-samples \
+cupertino download-samples \
   --authenticate \
   --output-dir ~/.docsucker/sample-code \
   --max-samples 10
@@ -116,7 +116,7 @@ This will:
 **Subsequent downloads (reuses saved authentication):**
 
 ```bash
-appledocsucker download-samples \
+cupertino download-samples \
   --output-dir ~/.docsucker/sample-code \
   --max-samples 100
 ```
@@ -172,7 +172,7 @@ This will:
 Convert downloaded markdown documentation to PDF format:
 
 ```bash
-appledocsucker export-pdf \
+cupertino export-pdf \
   --input-dir ~/.docsucker/docs \
   --output-dir ~/.docsucker/pdfs
 ```
@@ -226,7 +226,7 @@ This will:
 Re-run crawl to update only changed pages:
 
 ```bash
-appledocsucker update \
+cupertino update \
   --output-dir ~/.docsucker/docs
 ```
 
@@ -240,13 +240,13 @@ This uses the saved metadata to:
 Initialize default configuration:
 
 ```bash
-appledocsucker config init
+cupertino config init
 ```
 
 View current configuration:
 
 ```bash
-appledocsucker config show
+cupertino config show
 ```
 
 Configuration is saved to: `~/.docsucker/config.json`
@@ -296,7 +296,7 @@ Arrays are one of the most commonly used data types...
 ### Download Top 100 Swift Pages
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/swift" \
   --max-pages 100 \
   --max-depth 3 \
@@ -306,7 +306,7 @@ appledocsucker crawl \
 ### Force Re-download Everything
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/" \
   --max-pages 15000 \
   --force \
@@ -316,7 +316,7 @@ appledocsucker crawl \
 ### Download with Custom Settings
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/combine" \
   --max-pages 200 \
   --max-depth 5 \
@@ -328,7 +328,7 @@ appledocsucker crawl \
 During crawling, you'll see real-time progress:
 
 ```
-🚀 Docsucker - Apple Documentation Crawler
+🚀 Cupertino - Apple Documentation Crawler
 
 🚀 Starting crawl
    Start URL: https://developer.apple.com/documentation/swift
@@ -406,7 +406,7 @@ Some documentation pages may be inaccessible or moved. The crawler will continue
 ## Best Practices
 
 1. **Start Small**: Test with `--max-pages 10` first
-2. **Use Incremental Updates**: Run `appledocsucker update` regularly instead of full re-crawls
+2. **Use Incremental Updates**: Run `cupertino update` regularly instead of full re-crawls
 3. **Monitor Disk Space**: Full docs can be 2-3 GB
 4. **Be Respectful**: Default 0.5s delay between requests is reasonable
 5. **Backup Metadata**: Keep `.docsucker/metadata.json` for change detection

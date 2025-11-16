@@ -6,7 +6,7 @@ Added support for crawling Swift.org documentation (The Swift Programming Langua
 
 ## Changes Made
 
-### 1. URL Utilities Enhancement (Sources/DocsuckerShared/Models.swift)
+### 1. URL Utilities Enhancement (Sources/CupertinoShared/Models.swift)
 
 Updated `URLUtilities.extractFramework()` to recognize Swift.org URLs:
 - Detects `docs.swift.org` domain
@@ -17,7 +17,7 @@ Updated `URLUtilities.filename()` to handle Swift.org URLs:
 - Strips `https://docs.swift.org/` prefix
 - Normalizes paths to safe filenames
 
-### 2. Configuration Auto-Detection (Sources/DocsuckerShared/Configuration.swift)
+### 2. Configuration Auto-Detection (Sources/CupertinoShared/Configuration.swift)
 
 Enhanced `CrawlerConfiguration.init()` to automatically detect allowed prefixes:
 - **For swift.org domains**: Allows `/swift-book` and `/documentation` paths
@@ -41,7 +41,7 @@ This means you can now just pass a `--start-url` and the crawler will automatica
 Crawl Swift.org documentation:
 
 ```bash
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/" \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-book \
   --max-pages 200 \
@@ -52,7 +52,7 @@ appledocsucker crawl \
 ### Convenience Script
 
 ```bash
-cd /Volumes/Code/DeveloperExt/work/appledocsucker/Packages
+cd /Volumes/Code/DeveloperExt/work/cupertino/Packages
 ./crawl-swift-book.sh
 ```
 
@@ -123,7 +123,7 @@ Swift.org crawl supports the same resume functionality as Apple docs:
 To test without building, you can verify the URL utilities work correctly:
 
 ```swift
-import DocsuckerShared
+import CupertinoShared
 
 let swiftURL = URL(string: "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics")!
 let framework = URLUtilities.extractFramework(from: swiftURL)
@@ -143,8 +143,8 @@ Potential additions for future versions:
 
 ## Related Files
 
-- `Sources/DocsuckerShared/Models.swift` - URL utilities
-- `Sources/DocsuckerShared/Configuration.swift` - Configuration with auto-detection
+- `Sources/CupertinoShared/Models.swift` - URL utilities
+- `Sources/CupertinoShared/Configuration.swift` - Configuration with auto-detection
 - `CHANGELOG.md` - Version history
 - `VERSION` - Current version number
 - `crawl-swift-book.sh` - Convenience script

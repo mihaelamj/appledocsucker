@@ -1,4 +1,4 @@
-# AppleDocsucker - TODO List
+# Cupertino - TODO List
 
 claude code --continue
 
@@ -15,7 +15,7 @@ claude code --continue
 ```
 
 **Hardcoded paths used in code:**
-- Base: `/Volumes/Code/DeveloperExt/appledocsucker`
+- Base: `/Volumes/Code/DeveloperExt/cupertino`
 - Docs: `/Volumes/Code/DeveloperExt/appledocsucker/docs`
 - Evolution: `/Volumes/Code/DeveloperExt/appledocsucker/swift-evolution`
 - Samples: `/Volumes/Code/DeveloperExt/appledocsucker/sample-code`
@@ -36,7 +36,7 @@ claude code --continue
   - Original crawl started: Nov 14, 2024 12:00 AM
   - Original crawl killed at: Nov 15, 2024 ~7:45 PM (at page 12,661, depth=4 in Accelerate)
   - Resumed: Nov 15, 2024 ~7:47 PM from Accelerate framework
-  - Current command: `appledocsucker crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force`
+  - Current command: `cupertino crawl --start-url https://developer.apple.com/documentation/accelerate --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --max-pages 150000 --force`
   - Status: Running in background (bash_id: 40ae3f), skipping unchanged pages via SHA256 detection
   - Note: No crawl state persistence - using `--force` to rediscover pages and skip unchanged ones
 
@@ -52,7 +52,7 @@ claude code --continue
 - ✅ SwiftLint compliance
 - ✅ os.log logging implementation
 - ✅ Directory structure documentation (hardcoded paths)
-- ✅ **Incremental update/refresh capability** (`appledocsucker update` command with change detection)
+- ✅ **Incremental update/refresh capability** (`cupertino update` command with change detection)
 
 ---
 
@@ -69,7 +69,7 @@ claude code --continue
 - [ ] Wait for crawl to complete (~13,000 pages estimated)
 - [ ] Rebuild search index with all downloaded documentation
   ```bash
-  appledocsucker build-index \
+  cupertino build-index \
     --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
     --evolution-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution \
     --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
@@ -208,7 +208,7 @@ claude code --continue
   - **Crawl time estimate:** ~30-40 seconds (60-80 pages × 0.5s delay) + rendering time = ~5-10 minutes
 - [ ] Run package analysis script:
   ```bash
-  cd /Volumes/Code/DeveloperExt/appledocsucker
+  cd /Volumes/Code/DeveloperExt/cupertino
   mkdir -p scripts
   # Copy script from WARMUP.md
   chmod +x scripts/analyze-top-swift-packages.sh
@@ -319,7 +319,7 @@ claude code --continue
 **Reference:** `SAMPLE_CODE_PLAN.md` Phase 6
 **Estimated Time:** 6-9 hours
 
-**Note:** Basic refresh/update is already working via `appledocsucker update` command (uses change detection to skip unchanged pages). This phase adds:
+**Note:** Basic refresh/update is already working via `cupertino update` command (uses change detection to skip unchanged pages). This phase adds:
 1. **Historical tracking** - Track changes over time for analysis
 2. **Fast check mode** - Quickly discover what changed without downloading
 
@@ -332,7 +332,7 @@ claude code --continue
 - [ ] Store metadata: total pages, frameworks covered, version
 
 ### Phase 5b: Fast Check Mode (2-3 hours)
-- [ ] Add `appledocsucker check` command
+- [ ] Add `cupertino check` command
 - [ ] **Skip request delays** when in check-only mode
 - [ ] Only fetch headers or lightweight page metadata
 - [ ] Compare content hashes without downloading full HTML
@@ -342,7 +342,7 @@ claude code --continue
 - [ ] Much faster than full crawl (just checking, not downloading)
 
 ### Phase 5c: Delta Calculation (1-2 hours)
-- [ ] Create `appledocsucker compare` command
+- [ ] Create `cupertino compare` command
 - [ ] Compare two snapshots or check results
 - [ ] Implement delta calculation (added/modified/removed)
 - [ ] Generate delta JSON files
@@ -357,16 +357,16 @@ claude code --continue
 **Workflow:**
 ```bash
 # 1. Fast check (no delays, just discover changes)
-appledocsucker check --output changes.json
+cupertino check --output changes.json
 
 # 2. Review changes
 cat changes.json  # See what's new/modified
 
 # 3. Selective download (only changed pages)
-appledocsucker update --only-changed changes.json
+cupertino update --only-changed changes.json
 
 # 4. Full update (if needed)
-appledocsucker update  # Downloads all changes
+cupertino update  # Downloads all changes
 ```
 
 ---
@@ -378,7 +378,7 @@ appledocsucker update  # Downloads all changes
 **Estimated Time:** 6-8 hours (realistic) / 40-60 hours (professional)
 
 ### Phase 6a: Basic GUI (2-4 hours)
-- [ ] Create DocsuckerGUI SwiftUI app target
+- [ ] Create CupertinoGUI SwiftUI app target
 - [ ] Import existing packages (Core, Search)
 - [ ] Implement CrawlerView with live progress
 - [ ] Implement basic SearchView
@@ -500,10 +500,10 @@ Total: ~32-37 GB (sample zips must be kept, cannot automate downloads)
 **Implementation approach:**
 ```bash
 # Index all already-downloaded sample READMEs
-cd /Volumes/Code/DeveloperExt/appledocsucker
+cd /Volumes/Code/DeveloperExt/cupertino
 
 # 1. Index all sample READMEs (extracts temp, indexes, deletes extraction)
-appledocsucker index-samples \
+cupertino index-samples \
   --samples-dir sample-code \
   --docs-dir docs \
   --search-db search.db

@@ -1,9 +1,9 @@
-# AppleDocsucker - Update & Refresh Strategy
+# AppleCupertino - Update & Refresh Strategy
 
 ## Current Capabilities (Already Implemented)
 
 ### ✅ Basic Update/Refresh
-**Command:** `appledocsucker update`
+**Command:** `cupertino update`
 
 **How it works:**
 - Uses change detection with SHA256 content hashing
@@ -19,7 +19,7 @@
 **Usage:**
 ```bash
 # Incremental update (respects delays, downloads changes)
-appledocsucker update --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs
+cupertino update --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs
 ```
 
 ---
@@ -36,12 +36,12 @@ Current update workflow:
 
 **Goal:** Quickly discover what changed without downloading everything
 
-**Command:** `appledocsucker check` (to be implemented)
+**Command:** `cupertino check` (to be implemented)
 
 **How it will work:**
 ```bash
 # 1. Fast check (no delays, just discover changes)
-appledocsucker check \
+cupertino check \
   --output changes.json \
   --no-delay
 
@@ -65,10 +65,10 @@ appledocsucker check \
 cat changes.json
 
 # 3. Selective download (only changed pages, with delays)
-appledocsucker update --only-changed changes.json
+cupertino update --only-changed changes.json
 
 # OR: Full update with all changes
-appledocsucker update
+cupertino update
 ```
 
 ### Fast Check Implementation Strategy
@@ -153,12 +153,12 @@ CREATE TABLE crawl_history (
 
 ```bash
 # Run daily (fast, no downloads)
-appledocsucker check --output /tmp/daily-check.json
+cupertino check --output /tmp/daily-check.json
 
 # If changes found:
 if [ $(jq '.new | length' /tmp/daily-check.json) -gt 0 ]; then
   echo "Changes detected, running update..."
-  appledocsucker update --only-changed /tmp/daily-check.json
+  cupertino update --only-changed /tmp/daily-check.json
 fi
 ```
 
@@ -166,10 +166,10 @@ fi
 
 ```bash
 # Full incremental update (downloads all changes)
-appledocsucker update
+cupertino update
 
 # Create snapshot
-appledocsucker build-index --create-snapshot
+cupertino build-index --create-snapshot
 ```
 
 ### Workflow 3: Periodic Full Refresh (When Needed)
@@ -179,7 +179,7 @@ appledocsucker build-index --create-snapshot
 ```bash
 # Force re-crawl everything (ignore change detection)
 # ⚠️ WARNING: Takes 22+ hours for ~13K pages
-appledocsucker --force \
+cupertino --force \
   --start-url https://developer.apple.com/documentation/swift \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs
 ```
@@ -241,7 +241,7 @@ Returns:
 3. Create snapshot IDs (e.g., "snapshot-2024-11-15")
 
 ### Phase 5b: Fast Check Mode (2-3 hours)
-1. Implement `appledocsucker check` command
+1. Implement `cupertino check` command
 2. Skip delays when checking only
 3. Parallel HEAD requests or lightweight fetches
 4. Generate changes.json output
@@ -253,7 +253,7 @@ Returns:
 
 ### Phase 5d: Historical Tracking (1-2 hours)
 1. `crawl_history` table implementation
-2. `appledocsucker compare` command
+2. `cupertino compare` command
 3. Compare two snapshots
 4. Generate delta reports
 
@@ -282,7 +282,7 @@ Returns:
 # ~/.docsucker/daily-check.sh
 
 # Fast check for changes
-appledocsucker check --output /tmp/docsucker-check.json --no-delay
+cupertino check --output /tmp/docsucker-check.json --no-delay
 
 # Count changes
 NEW=$(jq '.new | length' /tmp/docsucker-check.json)
@@ -291,8 +291,8 @@ MODIFIED=$(jq '.modified | length' /tmp/docsucker-check.json)
 # If significant changes, update
 if [ $((NEW + MODIFIED)) -gt 10 ]; then
   echo "$(date): $NEW new, $MODIFIED modified - running update"
-  appledocsucker update --only-changed /tmp/docsucker-check.json
-  appledocsucker build-index
+  cupertino update --only-changed /tmp/docsucker-check.json
+  cupertino build-index
 else
   echo "$(date): No significant changes ($NEW new, $MODIFIED modified)"
 fi

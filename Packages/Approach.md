@@ -1,45 +1,45 @@
  ---
  
- process:appledocsucker AND category:crawler
+ process:cupertino AND category:crawler
  
  Log all
  
  ```bash
- log stream --predicate 'subsystem == "com.docsucker.appledocsucker"' --info --debug
+ log stream --predicate 'subsystem == "com.docsucker.cupertino"' --info --debug
  ```
  
  ```bash
-   appledocsucker crawl-evolution \
+   cupertino crawl-evolution \
     --output-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution \
     --only-accepted
     ```
     
 ```bash
-  appledocsucker --start-url https://developer.apple.com/documentation/swift \
+  cupertino --start-url https://developer.apple.com/documentation/swift \
     --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
     --max-pages 150000 \
     --force
 ```
 
 ```bash
-appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --evolution-dir
+cupertino build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs --evolution-dir
   /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution --metadata-file /Volumes/Code/DeveloperExt/appledocsucker/metadata.json
   --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
 ```
  
-  🔍 Making Docsucker Data Searchable for AI Agents
+  🔍 Making Cupertino Data Searchable for AI Agents
   
   ```bash
-    appledocsucker crawl \
+    cupertino crawl \
     --start-url "https://developer.apple.com/documentation/swift" \
     --max-pages 10 \
     --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs
     
-  appledocsucker crawl-evolution \
+  cupertino crawl-evolution \
     --output-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution
   ```
   
-    appledocsucker crawl \
+    cupertino crawl \
     --start-url "https://developer.apple.com/documentation/swift" \
     --max-pages 10 \
     --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs
@@ -51,19 +51,19 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
   Then to build the search index:
 
-  appledocsucker build-index \
+  cupertino build-index \
     --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
     --output /Volumes/Code/DeveloperExt/appledocsucker/search.db
 
   And to test the MCP server with the search database:
 
-  appledocsucker-mcp serve \
+  cupertino-mcp serve \
     --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
     --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
 
   You can watch the crawl progress in real-time in another terminal with:
 
-  log stream --predicate 'subsystem == "com.docsucker.appledocsucker" AND category == "crawler"'
+  log stream --predicate 'subsystem == "com.docsucker.cupertino" AND category == "crawler"'
 
   Current State Analysis
 
@@ -118,24 +118,24 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
   Step 1: Create Search Index Package
 
-  New Package: DocsuckerSearch
-  Packages/Sources/DocsuckerSearch/
+  New Package: CupertinoSearch
+  Packages/Sources/CupertinoSearch/
   ├── SearchIndex.swift          # SQLite FTS5 wrapper
   ├── SearchIndexBuilder.swift   # Builds index from crawled docs
   ├── SearchQuery.swift          # Query parser
   └── SearchResult.swift         # Ranked results
 
   Dependency Graph:
-  DocsuckerSearch → DocsuckerShared (for models)
-  DocsSearchToolProvider → DocsuckerSearch + MCPServer
-  DocsuckerMCP → DocsSearchToolProvider
+  CupertinoSearch → CupertinoShared (for models)
+  DocsSearchToolProvider → CupertinoSearch + MCPServer
+  CupertinoMCP → DocsSearchToolProvider
 
   Step 2: Search Index Schema
 
   SearchIndex.swift:
   import Foundation
   import SQLite3
-  import DocsuckerShared
+  import CupertinoShared
 
   public actor SearchIndex {
       private var db: OpaquePointer?
@@ -368,7 +368,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
   SearchIndexBuilder.swift:
   import Foundation
-  import DocsuckerShared
+  import CupertinoShared
 
   public actor SearchIndexBuilder {
       private let searchIndex: SearchIndex
@@ -452,7 +452,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
   import Foundation
   import MCPServer
   import MCPShared
-  import DocsuckerSearch
+  import CupertinoSearch
 
   public actor DocsSearchToolProvider: ToolProvider {
       private let searchIndex: SearchIndex
@@ -587,11 +587,11 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
       }
   }
 
-  Step 5: Update DocsuckerMCP to Register Tool Provider
+  Step 5: Update CupertinoMCP to Register Tool Provider
 
-  DocsuckerMCP/main.swift:
+  CupertinoMCP/main.swift:
   @main
-  struct DocsuckerMCP: AsyncParsableCommand {
+  struct CupertinoMCP: AsyncParsableCommand {
       @Option(name: .long, help: "Path to crawled documentation")
       var docsDir: String = FileManager.default.homeDirectoryForCurrentUser
           .appendingPathComponent(".docsucker/docs").path
@@ -602,7 +602,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
       func run() async throws {
           // Load configuration
-          let config = DocsuckerConfiguration(
+          let config = CupertinoConfiguration(
               crawler: CrawlerConfiguration(
                   outputDirectory: URL(fileURLWithPath: docsDir)
               )
@@ -614,7 +614,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
           )
 
           // Create MCP server
-          let server = MCPServer(name: "appledocsucker", version: "1.0.0")
+          let server = MCPServer(name: "cupertino", version: "1.0.0")
 
           // Register resource provider (existing)
           let resourceProvider = DocsResourceProvider(configuration: config)
@@ -635,7 +635,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
   Step 6: Add CLI Command to Build Index
 
-  DocsuckerCLI/main.swift - Add new command:
+  CupertinoCLI/main.swift - Add new command:
   struct BuildIndexCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
           commandName: "build-index",
@@ -687,14 +687,14 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
   Usage Flow
 
   1. Crawl docs (existing):
-  appledocsucker crawl --max-pages 15000
+  cupertino crawl --max-pages 15000
 
   2. Build search index (new):
-  appledocsucker build-index
+  cupertino build-index
   # Output: ~/.docsucker/search.db (~50MB)
 
   3. Start MCP server:
-  appledocsucker-mcp serve
+  cupertino-mcp serve
 
   4. AI Agent searches:
   Agent: Use tool "search_docs" with query="async await concurrency"
@@ -787,13 +787,13 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
   // Add new targets
   let docsuckerSearchTarget = Target.target(
-      name: "DocsuckerSearch",
-      dependencies: ["DocsuckerShared"]
+      name: "CupertinoSearch",
+      dependencies: ["CupertinoShared"]
   )
 
   let docsuckerSearchTestsTarget = Target.testTarget(
-      name: "DocsuckerSearchTests",
-      dependencies: ["DocsuckerSearch"]
+      name: "CupertinoSearchTests",
+      dependencies: ["CupertinoSearch"]
   )
 
   let docsSearchToolProviderTarget = Target.target(
@@ -801,30 +801,30 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
       dependencies: [
           "MCPServer",
           "MCPShared",
-          "DocsuckerSearch",
+          "CupertinoSearch",
       ]
   )
 
-  // Update DocsuckerMCP dependencies
+  // Update CupertinoMCP dependencies
   let docsuckerMCPTarget = Target.executableTarget(
-      name: "DocsuckerMCP",
+      name: "CupertinoMCP",
       dependencies: [
           "MCPServer",
           "MCPTransport",
-          "DocsuckerShared",
-          "DocsuckerMCPSupport",
+          "CupertinoShared",
+          "CupertinoMCPSupport",
           "DocsSearchToolProvider",  // NEW
           .product(name: "ArgumentParser", package: "swift-argument-parser"),
       ]
   )
 
-  // Update DocsuckerCLI dependencies
+  // Update CupertinoCLI dependencies
   let docsuckerCLITarget = Target.executableTarget(
-      name: "DocsuckerCLI",
+      name: "CupertinoCLI",
       dependencies: [
-          "DocsuckerShared",
-          "DocsuckerCore",
-          "DocsuckerSearch",  // NEW - for build-index command
+          "CupertinoShared",
+          "CupertinoCore",
+          "CupertinoSearch",  // NEW - for build-index command
           .product(name: "ArgumentParser", package: "swift-argument-parser"),
       ]
   )
@@ -857,7 +857,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
   3. Discover: "error handling" → Find try/catch, Result, throwing functions
   4. Browse: List all frameworks with page counts
 
-  This transforms Docsucker from a static document store into a searchable knowledge base that AI agents can actually use effectively! 🚀
+  This transforms Cupertino from a static document store into a searchable knowledge base that AI agents can actually use effectively! 🚀
 
 
 
@@ -876,7 +876,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
   - Files matching pattern SE-*.md
   - Indexed with framework set to "swift-evolution"
 
-⏺ Read(file_path: "/Volumes/Code/DeveloperExt/work/appledocsucker/Packages/Sources/DocsuckerSearch/SearchIndexBuilder.swift", offset: 105,
+⏺ Read(file_path: "/Volumes/Code/DeveloperExt/work/cupertino/Packages/Sources/CupertinoSearch/SearchIndexBuilder.swift", offset: 105,
       limit: 50)
   ⎿  Read 50 lines
 
@@ -931,14 +931,14 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
   1. Download both sources:
 
   # Apple docs
-  appledocsucker crawl --max-pages 15000
+  cupertino crawl --max-pages 15000
 
   # Swift Evolution proposals
-  appledocsucker crawl-evolution
+  cupertino crawl-evolution
 
   2. Build unified search index:
 
-  appledocsucker build-index
+  cupertino build-index
   # Automatically indexes both if they exist
 
   3. Search across both:
@@ -967,7 +967,7 @@ appledocsucker build-index --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/
 
 ⏺ Great question! Let me explain how the MCP protocol works and show you what the agent actually receives.
 
-⏺ Read(file_path: "/Volumes/Code/DeveloperExt/work/appledocsucker/Packages/Sources/DocsSearchToolProvider/DocsSearchToolProvider.swift",
+⏺ Read(file_path: "/Volumes/Code/DeveloperExt/work/cupertino/Packages/Sources/DocsSearchToolProvider/DocsSearchToolProvider.swift",
       offset: 60, limit: 80)
   ⎿  Read 80 lines
 

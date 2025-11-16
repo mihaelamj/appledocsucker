@@ -15,8 +15,8 @@ PROJECT_DIR := $(MAKEFILE_DIR)
 
 # Build configuration
 SWIFT_BUILD_FLAGS = -c release
-PRODUCT_NAME_CLI = appledocsucker
-PRODUCT_NAME_MCP = appledocsucker-mcp
+PRODUCT_NAME_CLI = cupertino
+PRODUCT_NAME_MCP = cupertino-mcp
 
 # Detect architecture
 ARCH := $(shell uname -m)
@@ -219,7 +219,7 @@ lint:
 archive: build-release
 	@echo "$(BOLD)$(GREEN)Creating release archive...$(RESET)"
 	@VERSION=$$($(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) --version); \
-	ARCHIVE_NAME="appledocsucker-$$VERSION-$(ARCH)-apple-darwin"; \
+	ARCHIVE_NAME="cupertino-$$VERSION-$(ARCH)-apple-darwin"; \
 	mkdir -p "$$ARCHIVE_NAME/bin"; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) "$$ARCHIVE_NAME/bin/"; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP) "$$ARCHIVE_NAME/bin/"; \
@@ -234,7 +234,7 @@ archive: build-release
 bottle: build-release
 	@echo "$(BOLD)$(GREEN)Creating Homebrew bottle...$(RESET)"
 	@VERSION=$$($(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) --version); \
-	BOTTLE_NAME="appledocsucker-$$VERSION.$(ARCH)_monterey.bottle.tar.gz"; \
+	BOTTLE_NAME="cupertino-$$VERSION.$(ARCH)_monterey.bottle.tar.gz"; \
 	mkdir -p bottle/$(PREFIX)/bin; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_CLI) bottle/$(PREFIX)/bin/; \
 	cp $(BUILD_DIR)/release/$(PRODUCT_NAME_MCP) bottle/$(PREFIX)/bin/; \

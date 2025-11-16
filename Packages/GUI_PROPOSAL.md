@@ -1,15 +1,15 @@
-# AppleDocsucker GUI Proposal
+# AppleCupertino GUI Proposal
 
 ## Executive Summary
 
-This document proposes a native macOS GUI application for AppleDocsucker that reuses the existing Swift codebase, provides bidirectional CLI ↔ GUI control, and enhances the user experience for documentation crawling, indexing, and search.
+This document proposes a native macOS GUI application for AppleCupertino that reuses the existing Swift codebase, provides bidirectional CLI ↔ GUI control, and enhances the user experience for documentation crawling, indexing, and search.
 
 ## Current State
 
 **What we have:**
-- `appledocsucker` CLI tool for crawling Apple documentation
-- `appledocsucker-mcp` MCP server for AI agent integration
-- `appledocsucker build-index` for building search indices
+- `cupertino` CLI tool for crawling Apple documentation
+- `cupertino-mcp` MCP server for AI agent integration
+- `cupertino build-index` for building search indices
 - Modular Swift packages: Core, Search, MCP, Logging
 
 **What's missing:**
@@ -40,21 +40,21 @@ This document proposes a native macOS GUI application for AppleDocsucker that re
 ### High-Level Structure
 
 ```
-appledocsucker/
+cupertino/
 ├── Sources/
-│   ├── DocsuckerCore/          # Shared crawling logic (existing)
-│   ├── DocsuckerSearch/        # Shared search indexing (existing)
-│   ├── DocsuckerLogging/       # Shared logging (existing)
-│   ├── DocsuckerMCP/           # MCP server (existing)
-│   ├── DocsuckerCLI/           # CLI executable (existing)
-│   ├── DocsuckerService/       # XPC service for IPC (new, optional)
-│   └── DocsuckerGUI/           # SwiftUI app (new)
-└── AppleDocsucker.xcodeproj    # Xcode project (new, optional)
+│   ├── CupertinoCore/          # Shared crawling logic (existing)
+│   ├── CupertinoSearch/        # Shared search indexing (existing)
+│   ├── CupertinoLogging/       # Shared logging (existing)
+│   ├── CupertinoMCP/           # MCP server (existing)
+│   ├── CupertinoCLI/           # CLI executable (existing)
+│   ├── CupertinoService/       # XPC service for IPC (new, optional)
+│   └── CupertinoGUI/           # SwiftUI app (new)
+└── AppleCupertino.xcodeproj    # Xcode project (new, optional)
 ```
 
 ### Component Breakdown
 
-#### 1. DocsuckerShared (New Package)
+#### 1. CupertinoShared (New Package)
 
 **Purpose:** Shared state management and models for both CLI and GUI
 
@@ -90,7 +90,7 @@ public struct IndexStatistics: Codable {
 }
 ```
 
-#### 2. DocsuckerService (New Package)
+#### 2. CupertinoService (New Package)
 
 **Purpose:** XPC service for inter-process communication
 
@@ -160,7 +160,7 @@ public class CrawlerService: NSObject, CrawlerServiceProtocol {
 }
 ```
 
-#### 3. DocsuckerGUI (New Package)
+#### 3. CupertinoGUI (New Package)
 
 **Purpose:** Native macOS SwiftUI application
 
@@ -169,7 +169,7 @@ public class CrawlerService: NSObject, CrawlerServiceProtocol {
 ##### Main Window (Tab-based)
 ```swift
 import SwiftUI
-import DocsuckerShared
+import CupertinoShared
 
 struct ContentView: View {
     @StateObject private var appState = AppState()
@@ -584,16 +584,16 @@ Both CLI and GUI communicate through the same XPC service:
 
 ```bash
 # Start GUI from CLI
-appledocsucker gui show
+cupertino gui show
 
 # Start crawl that GUI can monitor
-appledocsucker crawl --start-url ... --gui-attach
+cupertino crawl --start-url ... --gui-attach
 
 # Query GUI status from CLI
-appledocsucker gui status
+cupertino gui status
 
 # Open search in GUI with query
-appledocsucker gui search "URLSession"
+cupertino gui search "URLSession"
 ```
 
 ### Implementation
@@ -645,15 +645,15 @@ struct GUICommand: AsyncParsableCommand {
 
 ### Build Targets
 
-1. **CLI Binary** - `/usr/local/bin/appledocsucker` (existing)
-2. **XPC Service** - `/Library/Application Support/AppleDocsucker/service.xpc`
-3. **GUI App** - `/Applications/AppleDocsucker.app`
+1. **CLI Binary** - `/usr/local/bin/cupertino` (existing)
+2. **XPC Service** - `/Library/Application Support/AppleCupertino/service.xpc`
+3. **GUI App** - `/Applications/AppleCupertino.app`
 
 ### Installation
 
 ```bash
 # Via Homebrew (updated formula)
-brew install appledocsucker
+brew install cupertino
 
 # Installs:
 # - CLI binary
@@ -671,8 +671,8 @@ brew install appledocsucker
 **Total: ~6-8 hours** for working GUI with basic features
 
 ### Phase 1: Basic GUI (2-4 hours)
-- [ ] Create DocsuckerGUI SwiftUI app target
-- [ ] Import existing DocsuckerCore, DocsuckerSearch packages
+- [ ] Create CupertinoGUI SwiftUI app target
+- [ ] Import existing CupertinoCore, CupertinoSearch packages
 - [ ] Implement CrawlerView with live progress (using existing Crawler)
 - [ ] Implement basic SearchView (using existing SearchIndex)
 - [ ] Implement StatsView with database info
@@ -716,7 +716,7 @@ This accounts for:
 - [ ] Project setup and scaffolding
 
 #### Phase 2: Core Implementation (16-24 hours)
-- [ ] Create DocsuckerGUI SwiftUI app
+- [ ] Create CupertinoGUI SwiftUI app
 - [ ] Implement CrawlerView with live progress
 - [ ] Implement SearchView with results display
 - [ ] Implement StatsView with charts and metrics
@@ -873,7 +873,7 @@ actor ThrottledPublisher {
 
 ## Conclusion
 
-A native macOS GUI for AppleDocsucker will:
+A native macOS GUI for AppleCupertino will:
 1. Make the tool accessible to more users
 2. Provide better visibility into long-running operations
 3. Maintain full backwards compatibility with CLI

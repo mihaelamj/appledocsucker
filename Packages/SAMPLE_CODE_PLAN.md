@@ -94,7 +94,7 @@
 ```
 
 **Hardcoded paths in code:**
-- Base: `/Volumes/Code/DeveloperExt/appledocsucker`
+- Base: `/Volumes/Code/DeveloperExt/cupertino`
 - Docs: `$BASE/docs`
 - Evolution: `$BASE/swift-evolution`
 - Samples (zipped): `$BASE/sample-code`
@@ -309,7 +309,7 @@ Return requested files
 
 1. ✅ Extract ALL samples upfront (plenty of SSD space)
 2. ✅ Strip .git directories (reduce size)
-3. ✅ Hardcode base path: `/Volumes/Code/DeveloperExt/appledocsucker`
+3. ✅ Hardcode base path: `/Volumes/Code/DeveloperExt/cupertino`
 4. ✅ Index READMEs first, full code indexing in Phase 4
 5. ✅ Keep .zip files for re-download capability
 
@@ -317,7 +317,7 @@ Return requested files
 
 **✅ Extraction during indexing** (Recommended)
 
-The `appledocsucker build-index` command should:
+The `cupertino build-index` command should:
 1. Scan `sample-code/*.zip` files
 2. Extract each to `sample-code-extracted/{slug}/` (if not already extracted)
 3. Strip `.git` directories during extraction
@@ -326,14 +326,14 @@ The `appledocsucker build-index` command should:
 6. Store metadata in `search.db`
 
 **Benefits:**
-- Single command for everything: `appledocsucker build-index`
+- Single command for everything: `cupertino build-index`
 - Smart: only extracts if needed (checks extracted dir existence)
 - Clean: removes .git during extraction
 - Integrated: extraction + indexing in one pass
 
 **Command:**
 ```bash
-appledocsucker build-index \
+cupertino build-index \
   --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
   --evolution-dir /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution \
   --samples-dir /Volumes/Code/DeveloperExt/appledocsucker/sample-code \
@@ -464,26 +464,26 @@ func createSnapshot(outputPath: String) async throws {
 }
 ```
 
-#### 2. Add to `appledocsucker build-index` command
+#### 2. Add to `cupertino build-index` command
 
 ```bash
-appledocsucker build-index \
+cupertino build-index \
   --docs-dir /path/to/docs \
   --search-db /path/to/search.db \
   --create-snapshot /path/to/deltas/snapshots/2024-11-15.json
 ```
 
-#### 3. Add `appledocsucker compare` command
+#### 3. Add `cupertino compare` command
 
 ```bash
 # Compare two snapshots
-appledocsucker compare \
+cupertino compare \
   --from deltas/snapshots/2024-11-15.json \
   --to deltas/snapshots/2024-11-20.json \
   --output deltas/changes/2024-11-15_to_2024-11-20.json
 
 # Compare against latest
-appledocsucker compare \
+cupertino compare \
   --from deltas/latest.json \
   --to deltas/snapshots/2024-11-20.json \
   --auto-output
@@ -547,27 +547,27 @@ func getDocumentationChanges(since: String?) async throws -> [Change] {
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/appledocsucker-daily-crawl
+# /usr/local/bin/cupertino-daily-crawl
 
 DATE=$(date +%Y-%m-%d)
 SNAPSHOT="/Volumes/Code/DeveloperExt/appledocsucker/deltas/snapshots/${DATE}.json"
 LATEST="/Volumes/Code/DeveloperExt/appledocsucker/deltas/latest.json"
 
 # Crawl documentation
-appledocsucker crawl \
+cupertino crawl \
   --start-url https://developer.apple.com/documentation \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
   --max-pages 20000
 
 # Build index and create snapshot
-appledocsucker build-index \
+cupertino build-index \
   --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
   --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db \
   --create-snapshot "$SNAPSHOT"
 
 # Compare with previous crawl
 if [ -f "$LATEST" ]; then
-  appledocsucker compare \
+  cupertino compare \
     --from "$LATEST" \
     --to "$SNAPSHOT" \
     --auto-output
@@ -824,34 +824,34 @@ All search results should clearly indicate the source:
 
 ```bash
 # Crawl ALL Apple open-source packages (automatic)
-appledocsucker crawl-packages \
+cupertino crawl-packages \
   --apple-official \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 # Automatically fetches all packages from github.com/apple
 # ~18 packages: swift-nio, swift-log, swift-argument-parser, etc.
 
 # Crawl curated community packages (top 50, excluding Apple)
-appledocsucker crawl-packages \
+cupertino crawl-packages \
   --curated \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 # Uses predefined list of high-quality packages
 # Vapor, Alamofire, TCA, etc.
 
 # Crawl specific package
-appledocsucker crawl-package \
+cupertino crawl-package \
   --owner vapor \
   --repo vapor \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 
 # Crawl top N packages from SwiftPackageIndex
-appledocsucker crawl-packages \
+cupertino crawl-packages \
   --top 100 \
   --min-stars 1000 \
   --exclude-owner apple \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 
 # Crawl everything (Apple + curated + top N)
-appledocsucker crawl-packages \
+cupertino crawl-packages \
   --all \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 ```
@@ -1033,7 +1033,7 @@ Curated list of high-quality, well-maintained community packages:
 
 Users can request specific packages via:
 ```bash
-appledocsucker crawl-package --owner <owner> --repo <repo>
+cupertino crawl-package --owner <owner> --repo <repo>
 ```
 
 ### Dependency Resolution
@@ -1061,13 +1061,13 @@ vapor/vapor
 **Command flags:**
 ```bash
 # Crawl package WITH dependencies (default)
-appledocsucker crawl-package --owner vapor --repo vapor --with-dependencies
+cupertino crawl-package --owner vapor --repo vapor --with-dependencies
 
 # Crawl package WITHOUT dependencies
-appledocsucker crawl-package --owner vapor --repo vapor --no-dependencies
+cupertino crawl-package --owner vapor --repo vapor --no-dependencies
 
 # Set dependency depth
-appledocsucker crawl-package --owner vapor --repo vapor --dependency-depth 2
+cupertino crawl-package --owner vapor --repo vapor --dependency-depth 2
 ```
 
 **Dependency Metadata:**
@@ -1150,16 +1150,16 @@ Result: 3 packages indexed (vapor, routing-kit, console-kit)
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/appledocsucker-sync-packages
+# /usr/local/bin/cupertino-sync-packages
 
 # Weekly sync of top Swift packages
-appledocsucker crawl-packages \
+cupertino crawl-packages \
   --top 50 \
   --min-stars 1000 \
   --output-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party
 
 # Rebuild index including third-party
-appledocsucker build-index \
+cupertino build-index \
   --docs-dir /Volumes/Code/DeveloperExt/appledocsucker/docs \
   --third-party-dir /Volumes/Code/DeveloperExt/appledocsucker/third-party \
   --search-db /Volumes/Code/DeveloperExt/appledocsucker/search.db
@@ -1169,4 +1169,4 @@ echo "✅ Synced $(ls -1 third-party | wc -l) packages"
 
 ---
 
-**This makes AppleDocsucker the single source of truth for ALL Swift documentation - official + ecosystem.**
+**This makes AppleCupertino the single source of truth for ALL Swift documentation - official + ecosystem.**

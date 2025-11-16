@@ -1,6 +1,6 @@
-# Homebrew Formula Guide for Docsucker
+# Homebrew Formula Guide for Cupertino
 
-Complete guide for creating and publishing Docsucker to Homebrew.
+Complete guide for creating and publishing Cupertino to Homebrew.
 
 > **Note**: All `make` commands in this guide can be run from the **root directory** of the repository. A wrapper Makefile in the root delegates to `Packages/Makefile`, so you don't need to `cd Packages` first.
 
@@ -18,7 +18,7 @@ Complete guide for creating and publishing Docsucker to Homebrew.
 
 ## What is Homebrew?
 
-[Homebrew](https://brew.sh) is the most popular package manager for macOS. Creating a Homebrew formula allows users to install Docsucker with a single command:
+[Homebrew](https://brew.sh) is the most popular package manager for macOS. Creating a Homebrew formula allows users to install Cupertino with a single command:
 
 ```bash
 brew install docsucker
@@ -78,13 +78,13 @@ brew install docsucker
 Create `Formula/docsucker.rb`:
 
 ```ruby
-class Docsucker < Formula
+class Cupertino < Formula
   desc "Apple Documentation Crawler & MCP Server"
-  homepage "https://github.com/YOUR_USERNAME/appledocsucker"
-  url "https://github.com/YOUR_USERNAME/appledocsucker/archive/refs/tags/v1.0.0.tar.gz"
+  homepage "https://github.com/YOUR_USERNAME/cupertino"
+  url "https://github.com/YOUR_USERNAME/cupertino/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "SHA256_HASH_OF_TARBALL"  # Get with: shasum -a 256 tarball.tar.gz
   license "MIT"  # Or your chosen license
-  head "https://github.com/YOUR_USERNAME/appledocsucker.git", branch: "main"
+  head "https://github.com/YOUR_USERNAME/cupertino.git", branch: "main"
 
   # Dependencies
   depends_on "swift" => :build
@@ -100,7 +100,7 @@ class Docsucker < Formula
 
     # Install binaries
     bin.install ".build/release/docsucker"
-    bin.install ".build/release/appledocsucker-mcp"
+    bin.install ".build/release/cupertino-mcp"
 
     # Install documentation
     doc.install "README.md"
@@ -111,25 +111,25 @@ class Docsucker < Formula
 
   def caveats
     <<~EOS
-      Docsucker has been installed!
+      Cupertino has been installed!
 
       📚 CLI Usage:
         Download Apple documentation:
-          appledocsucker crawl --max-pages 15000 --output-dir ~/.docsucker/docs
+          cupertino crawl --max-pages 15000 --output-dir ~/.docsucker/docs
 
         Download Swift Evolution proposals:
-          appledocsucker crawl-evolution --output-dir ~/.docsucker/swift-evolution
+          cupertino crawl-evolution --output-dir ~/.docsucker/swift-evolution
 
       🤖 MCP Server Setup:
         1. Start server:
-           appledocsucker-mcp serve
+           cupertino-mcp serve
 
         2. Configure Claude Desktop:
            Edit ~/Library/Application Support/Claude/claude_desktop_config.json:
            {
              "mcpServers": {
-               "appledocsucker": {
-                 "command": "#{bin}/appledocsucker-mcp",
+               "cupertino": {
+                 "command": "#{bin}/cupertino-mcp",
                  "args": ["serve"]
                }
              }
@@ -155,12 +155,12 @@ class Docsucker < Formula
     assert_match "1.0.0", shell_output("#{bin}/docsucker --version")
 
     # Test MCP help
-    assert_match "MCP Server", shell_output("#{bin}/appledocsucker-mcp --help")
-    assert_match "1.0.0", shell_output("#{bin}/appledocsucker-mcp --version")
+    assert_match "MCP Server", shell_output("#{bin}/cupertino-mcp --help")
+    assert_match "1.0.0", shell_output("#{bin}/cupertino-mcp --version")
 
     # Test small crawl (integration test)
     testdir = testpath/"test-output"
-    system bin/"appledocsucker", "crawl",
+    system bin/"cupertino", "crawl",
            "--start-url", "https://developer.apple.com/documentation/swift/array",
            "--max-pages", "1",
            "--max-depth", "0",
@@ -212,11 +212,11 @@ shasum -a 256 Packages/docsucker-1.0.0.arm64_monterey.bottle.tar.gz
 ### Adding Bottles to Formula
 
 ```ruby
-class Docsucker < Formula
+class Cupertino < Formula
   # ... (desc, homepage, etc.) ...
 
   bottle do
-    root_url "https://github.com/YOUR_USERNAME/appledocsucker/releases/download/v1.0.0"
+    root_url "https://github.com/YOUR_USERNAME/cupertino/releases/download/v1.0.0"
     sha256 cellar: :any_skip_relocation, arm64_sequoia: "BOTTLE_SHA256_HERE"
     sha256 cellar: :any_skip_relocation, arm64_sonoma:  "BOTTLE_SHA256_HERE"
     sha256 cellar: :any_skip_relocation, ventura:       "BOTTLE_SHA256_HERE"
@@ -262,11 +262,11 @@ brew install --build-from-source Formula/docsucker.rb
 brew test docsucker
 
 # 5. Verify installation
-appledocsucker --version
-appledocsucker-mcp --version
+cupertino --version
+cupertino-mcp --version
 
 # 6. Test functionality
-appledocsucker crawl --max-pages 1 --output-dir /tmp/test-docs
+cupertino crawl --max-pages 1 --output-dir /tmp/test-docs
 
 # 7. Uninstall
 brew uninstall docsucker
@@ -389,7 +389,7 @@ Submit to official [homebrew-core](https://github.com/Homebrew/homebrew-core) fo
 2. **Create formula**:
    ```bash
    # Use Homebrew's formula creator
-   brew create https://github.com/YOUR_USERNAME/appledocsucker/archive/refs/tags/v1.0.0.tar.gz
+   brew create https://github.com/YOUR_USERNAME/cupertino/archive/refs/tags/v1.0.0.tar.gz
 
    # Edit the generated formula
    brew edit docsucker
@@ -426,17 +426,17 @@ Submit to official [homebrew-core](https://github.com/Homebrew/homebrew-core) fo
 If you want to distribute pre-built binaries instead of building from source:
 
 ```ruby
-cask "appledocsucker" do
+cask "cupertino" do
   version "1.0.0"
   sha256 "SHA256_OF_ZIP"
 
-  url "https://github.com/YOUR_USERNAME/appledocsucker/releases/download/v#{version}/docsucker-#{version}-macos.zip"
-  name "Docsucker"
+  url "https://github.com/YOUR_USERNAME/cupertino/releases/download/v#{version}/docsucker-#{version}-macos.zip"
+  name "Cupertino"
   desc "Apple Documentation Crawler & MCP Server"
-  homepage "https://github.com/YOUR_USERNAME/appledocsucker"
+  homepage "https://github.com/YOUR_USERNAME/cupertino"
 
-  binary "appledocsucker"
-  binary "appledocsucker-mcp"
+  binary "cupertino"
+  binary "cupertino-mcp"
 end
 ```
 
@@ -456,9 +456,9 @@ make archive
 # Creates: Packages/docsucker-1.0.0-arm64-apple-darwin.tar.gz
 
 # 3. Upload to GitHub Releases
-# Go to: https://github.com/YOUR_USERNAME/appledocsucker/releases/new
+# Go to: https://github.com/YOUR_USERNAME/cupertino/releases/new
 # - Tag: v1.0.0
-# - Title: Docsucker 1.0.0
+# - Title: Cupertino 1.0.0
 # - Upload: Packages/docsucker-1.0.0-arm64-apple-darwin.tar.gz
 
 # 4. Get SHA256
@@ -500,7 +500,7 @@ brew install docsucker
 
 ```bash
 # 1. Update version in code
-# - Packages/Sources/DocsuckerShared/Configuration.swift
+# - Packages/Sources/CupertinoShared/Configuration.swift
 # - Update version to 1.1.0
 
 # 2. Commit and tag (from root directory)
@@ -573,7 +573,7 @@ brew linkage docsucker
 ## Example: Complete First Release
 
 ```bash
-# In appledocsucker repository (root directory)
+# In cupertino repository (root directory)
 git tag -a v1.0.0 -m "Release 1.0.0"
 git push origin v1.0.0
 
@@ -581,7 +581,7 @@ make archive
 # → Packages/docsucker-1.0.0-arm64-apple-darwin.tar.gz
 
 # Upload to GitHub Releases
-# https://github.com/YOUR_USERNAME/appledocsucker/releases/new
+# https://github.com/YOUR_USERNAME/cupertino/releases/new
 
 # Get SHA256
 shasum -a 256 Packages/docsucker-1.0.0-arm64-apple-darwin.tar.gz
@@ -594,7 +594,7 @@ mkdir -p Formula
 
 # Create Formula/docsucker.rb with template above
 # Set:
-#   url "https://github.com/YOUR_USERNAME/appledocsucker/archive/refs/tags/v1.0.0.tar.gz"
+#   url "https://github.com/YOUR_USERNAME/cupertino/archive/refs/tags/v1.0.0.tar.gz"
 #   sha256 "abc123def456..."
 
 git add Formula/docsucker.rb
@@ -604,8 +604,8 @@ git push
 # Test installation
 brew tap YOUR_USERNAME/tap
 brew install docsucker
-appledocsucker --version  # Should show 1.0.0
-appledocsucker-mcp --version
+cupertino --version  # Should show 1.0.0
+cupertino-mcp --version
 
 # Success! Users can now install with:
 # brew tap YOUR_USERNAME/tap

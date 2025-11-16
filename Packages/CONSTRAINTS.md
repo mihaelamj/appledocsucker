@@ -1,4 +1,4 @@
-# AppleDocsucker - Key Constraints & Design Decisions
+# AppleCupertino - Key Constraints & Design Decisions
 
 ## Hardcoded Directory Structure
 
@@ -24,7 +24,7 @@
 
 **Absolute paths hardcoded in code:**
 ```
-Base:       /Volumes/Code/DeveloperExt/appledocsucker
+Base:       /Volumes/Code/DeveloperExt/cupertino
 Docs:       /Volumes/Code/DeveloperExt/appledocsucker/docs
 Evolution:  /Volumes/Code/DeveloperExt/appledocsucker/swift-evolution
 Samples:    /Volumes/Code/DeveloperExt/appledocsucker/sample-code

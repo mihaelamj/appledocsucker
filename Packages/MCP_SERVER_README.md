@@ -1,4 +1,4 @@
-# Docsucker MCP Server - Serve Documentation to AI Agents
+# Cupertino MCP Server - Serve Documentation to AI Agents
 
 An MCP (Model Context Protocol) server that provides Apple documentation and Swift Evolution proposals to AI agents like Claude.
 
@@ -24,13 +24,13 @@ Before starting the MCP server, you need to download documentation:
 
 ```bash
 # Download Apple documentation
-appledocsucker crawl \
+cupertino crawl \
   --start-url "https://developer.apple.com/documentation/" \
   --max-pages 15000 \
   --output-dir ~/.docsucker/docs
 
 # Download Swift Evolution proposals
-appledocsucker crawl-evolution \
+cupertino crawl-evolution \
   --output-dir ~/.docsucker/swift-evolution
 ```
 
@@ -40,16 +40,16 @@ appledocsucker crawl-evolution \
 
 ```bash
 cd Packages
-swift build --product appledocsucker-mcp
+swift build --product cupertino-mcp
 ```
 
-The executable will be at: `.build/debug/appledocsucker-mcp`
+The executable will be at: `.build/debug/cupertino-mcp`
 
 ### Install to /usr/local/bin (optional):
 
 ```bash
-swift build -c release --product appledocsucker-mcp
-cp .build/release/appledocsucker-mcp /usr/local/bin/
+swift build -c release --product cupertino-mcp
+cp .build/release/cupertino-mcp /usr/local/bin/
 ```
 
 ## Usage
@@ -57,7 +57,7 @@ cp .build/release/appledocsucker-mcp /usr/local/bin/
 ### Start the MCP Server
 
 ```bash
-appledocsucker-mcp serve \
+cupertino-mcp serve \
   --docs-dir ~/.docsucker/docs \
   --evolution-dir ~/.docsucker/swift-evolution
 ```
@@ -80,13 +80,13 @@ Edit your Claude Desktop configuration file:
 
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-### 2. Add Docsucker MCP Server
+### 2. Add Cupertino MCP Server
 
 ```json
 {
   "mcpServers": {
-    "appledocsucker": {
-      "command": "/Users/YOUR_USERNAME/.local/bin/appledocsucker-mcp",
+    "cupertino": {
+      "command": "/Users/YOUR_USERNAME/.local/bin/cupertino-mcp",
       "args": ["serve"],
       "env": {}
     }
@@ -94,9 +94,9 @@ Edit your Claude Desktop configuration file:
 }
 ```
 
-**Note**: Replace `/Users/YOUR_USERNAME/.local/bin/appledocsucker-mcp` with the actual path to your binary:
-- If installed globally: `/usr/local/bin/appledocsucker-mcp`
-- If using build directory: `/path/to/Packages/.build/release/appledocsucker-mcp`
+**Note**: Replace `/Users/YOUR_USERNAME/.local/bin/cupertino-mcp` with the actual path to your binary:
+- If installed globally: `/usr/local/bin/cupertino-mcp`
+- If using build directory: `/path/to/Packages/.build/release/cupertino-mcp`
 
 ### 3. Custom Directories (Optional)
 
@@ -105,8 +105,8 @@ If you want to use custom documentation directories:
 ```json
 {
   "mcpServers": {
-    "appledocsucker": {
-      "command": "/usr/local/bin/appledocsucker-mcp",
+    "cupertino": {
+      "command": "/usr/local/bin/cupertino-mcp",
       "args": [
         "serve",
         "--docs-dir", "/Users/YOUR_USERNAME/my-docs",
@@ -135,8 +135,8 @@ Edit your Claude Code MCP settings:
 ```json
 {
   "mcpServers": {
-    "appledocsucker": {
-      "command": "/usr/local/bin/appledocsucker-mcp",
+    "cupertino": {
+      "command": "/usr/local/bin/cupertino-mcp",
       "args": ["serve"]
     }
   }
@@ -233,7 +233,7 @@ Get available URI patterns:
 When the server starts, you'll see:
 
 ```
-🚀 Docsucker MCP Server starting...
+🚀 Cupertino MCP Server starting...
    Apple docs: /Users/username/.docsucker/docs
    Evolution: /Users/username/.docsucker/swift-evolution
    Waiting for client connection...
@@ -253,16 +253,16 @@ ls ~/.docsucker/swift-evolution
 
 **Check binary permissions:**
 ```bash
-chmod +x /usr/local/bin/appledocsucker-mcp
+chmod +x /usr/local/bin/cupertino-mcp
 ```
 
 ### Claude Can't Find Server
 
 **Verify binary path:**
 ```bash
-which appledocsucker-mcp
+which cupertino-mcp
 # or
-ls -la /usr/local/bin/appledocsucker-mcp
+ls -la /usr/local/bin/cupertino-mcp
 ```
 
 **Check Claude config syntax:**
@@ -274,8 +274,8 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | python3 -
 
 **Make sure you downloaded docs first:**
 ```bash
-appledocsucker crawl --max-pages 100 --output-dir ~/.docsucker/docs
-appledocsucker crawl-evolution --output-dir ~/.docsucker/swift-evolution
+cupertino crawl --max-pages 100 --output-dir ~/.docsucker/docs
+cupertino crawl-evolution --output-dir ~/.docsucker/swift-evolution
 ```
 
 ### Server Crashes
@@ -283,14 +283,14 @@ appledocsucker crawl-evolution --output-dir ~/.docsucker/swift-evolution
 **Check logs in Claude Desktop:**
 - Open Claude Desktop
 - Go to Settings → Developer → View Logs
-- Look for errors related to "appledocsucker"
+- Look for errors related to "cupertino"
 
 ## Manual Testing
 
 You can test the MCP server manually using stdio:
 
 ```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"resources/list","params":{}}' | appledocsucker-mcp serve
+echo '{"jsonrpc":"2.0","id":1,"method":"resources/list","params":{}}' | cupertino-mcp serve
 ```
 
 Expected output: JSON-RPC response with list of resources.
@@ -306,7 +306,7 @@ Expected output: JSON-RPC response with list of resources.
          │ (JSON-RPC 2.0)
          │
 ┌────────▼──────-----──┐
-│  appledocsucker-mcp  │
+│  cupertino-mcp  │
 │   MCP Server         │
 └────────┬─────-----───┘
          │
@@ -409,7 +409,7 @@ Stored as-is from GitHub:
 
 ## Best Practices
 
-1. **Keep docs updated**: Run `appledocsucker update` periodically
+1. **Keep docs updated**: Run `cupertino update` periodically
 2. **Download before serving**: Ensure docs exist before starting server
 3. **Use absolute paths**: In config, use full paths not ~
 4. **Monitor logs**: Check Claude logs if issues occur

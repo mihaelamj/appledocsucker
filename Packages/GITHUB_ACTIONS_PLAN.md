@@ -1,4 +1,4 @@
-# AppleDocsucker - GitHub Actions & Badges Plan
+# AppleCupertino - GitHub Actions & Badges Plan
 
 ## README Badges (Phase 7a)
 
@@ -7,13 +7,13 @@
 Add these at the top of README.md:
 
 ```markdown
-# AppleDocsucker
+# AppleCupertino
 
 ![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg)
 ![Platform](https://img.shields.io/badge/Platform-macOS%2010.15%2B-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Build Status](https://github.com/mmj/appledocsucker/workflows/Build/badge.svg)
-![Latest Release](https://img.shields.io/github/v/release/mmj/appledocsucker)
+![Build Status](https://github.com/mmj/cupertino/workflows/Build/badge.svg)
+![Latest Release](https://img.shields.io/github/v/release/mmj/cupertino)
 
 > Crawl and index Apple developer documentation for AI agent consumption
 ```
@@ -37,19 +37,19 @@ Add these at the top of README.md:
 
 **Build & CI:**
 ```markdown
-![Build Status](https://github.com/mmj/appledocsucker/workflows/Build/badge.svg)
-![SwiftLint](https://github.com/mmj/appledocsucker/workflows/SwiftLint/badge.svg)
+![Build Status](https://github.com/mmj/cupertino/workflows/Build/badge.svg)
+![SwiftLint](https://github.com/mmj/cupertino/workflows/SwiftLint/badge.svg)
 ```
 
 **Release & License:**
 ```markdown
-![Latest Release](https://img.shields.io/github/v/release/mmj/appledocsucker)
+![Latest Release](https://img.shields.io/github/v/release/mmj/cupertino)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ```
 
 **Project Stats:**
 ```markdown
-![GitHub Stars](https://img.shields.io/github/stars/mmj/appledocsucker?style=social)
+![GitHub Stars](https://img.shields.io/github/stars/mmj/cupertino?style=social)
 ![Documentation](https://img.shields.io/badge/docs-13K%2B%20pages-success)
 ![Sample Code](https://img.shields.io/badge/samples-607%20projects-blue)
 ```
@@ -104,14 +104,14 @@ jobs:
         cd Packages
         swift build --configuration release
         mkdir -p artifacts
-        cp .build/release/appledocsucker artifacts/
-        cp .build/release/appledocsucker-mcp artifacts/
+        cp .build/release/cupertino artifacts/
+        cp .build/release/cupertino-mcp artifacts/
 
     - name: Upload artifacts
       if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v4
       with:
-        name: appledocsucker-binaries
+        name: cupertino-binaries
         path: Packages/artifacts/
 ```
 
@@ -177,21 +177,21 @@ jobs:
       with:
         swift-version: '6.2'
 
-    - name: Build appledocsucker
+    - name: Build cupertino
       run: |
         cd Packages
         swift build --configuration release
 
-    - name: Install appledocsucker
+    - name: Install cupertino
       run: |
-        sudo cp Packages/.build/release/appledocsucker /usr/local/bin/
-        sudo cp Packages/.build/release/appledocsucker-mcp /usr/local/bin/
+        sudo cp Packages/.build/release/cupertino /usr/local/bin/
+        sudo cp Packages/.build/release/cupertino-mcp /usr/local/bin/
 
     - name: Run fast check
       id: check
       run: |
         # Fast check for changes (once Phase 5b is implemented)
-        appledocsucker check --output /tmp/changes.json --no-delay || true
+        cupertino check --output /tmp/changes.json --no-delay || true
 
         # Count changes
         if [ -f /tmp/changes.json ]; then
@@ -228,7 +228,7 @@ jobs:
 Consider running a full update to capture these changes.
 
 \`\`\`bash
-appledocsucker update
+cupertino update
 \`\`\`
             `,
             labels: ['documentation', 'automated']
@@ -276,15 +276,15 @@ jobs:
     - name: Create artifacts
       run: |
         mkdir -p release
-        cp Packages/.build/release/appledocsucker release/
-        cp Packages/.build/release/appledocsucker-mcp release/
+        cp Packages/.build/release/cupertino release/
+        cp Packages/.build/release/cupertino-mcp release/
         cd release
-        tar -czf appledocsucker-${{ github.ref_name }}-macos.tar.gz appledocsucker appledocsucker-mcp
+        tar -czf cupertino-${{ github.ref_name }}-macos.tar.gz cupertino cupertino-mcp
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: release/appledocsucker-${{ github.ref_name }}-macos.tar.gz
+        files: release/cupertino-${{ github.ref_name }}-macos.tar.gz
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -337,8 +337,8 @@ For `main` branch:
 - name: Run update if changes detected
   if: steps.check.outputs.new > 10
   run: |
-    appledocsucker update --only-changed /tmp/changes.json
-    appledocsucker build-index
+    cupertino update --only-changed /tmp/changes.json
+    cupertino build-index
 
 - name: Create PR with updates
   uses: peter-evans/create-pull-request@v5
@@ -395,7 +395,7 @@ echo "{
 
 Then use shields.io endpoint badge:
 ```markdown
-![Docs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/mmj/appledocsucker/main/docs-badge.json)
+![Docs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/mmj/cupertino/main/docs-badge.json)
 ```
 
 ---
